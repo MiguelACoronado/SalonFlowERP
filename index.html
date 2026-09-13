@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SalonFlow ERP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wine:#7A2333;
+    --wine-dark:#5C1A26;
+    --cream:#F7F2E9;
+    --paper:#FFFCF7;
+    --charcoal:#2A2420;
+    --gold:#B9922F;
+    --line:#DCD2BC;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Work Sans', sans-serif;
+    background:var(--cream);
+    color:var(--charcoal);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.brand-word{
+    font-family:'Fraunces', serif;
+    margin:0;
+  }
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;}
+
+  /* Topbar */
+  .topbar{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    padding:18px 28px;
+    border-bottom:2px solid var(--charcoal);
+    background:var(--paper);
+    position:sticky;top:0;
+    z-index:20;
+  }
+  .brand-word{font-size:20px;color:var(--wine-dark);}
+  .brand-sub{font-size:11.5px;color:#8a8072;margin-top:1px;}
+  .topbar-titles{margin-left:6px;}
+  .topbar-titles .crumb{font-size:12.5px;color:#8a8072;margin-top:1px;}
+
+  /* Hamburger */
+  .hamburger{
+    all:unset;
+    width:40px;height:40px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:5px;
+    cursor:pointer;
+    flex-shrink:0;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background:var(--cream);
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .hamburger:hover{border-color:var(--wine);}
+  .hamburger.open{
+    background:var(--wine);
+    border-color:var(--wine);
+  }
+  .hamburger span{
+    display:block;
+    height:2.5px;
+    width:18px;
+    background:var(--charcoal);
+    border-radius:1px;
+    transition:transform .25s ease, opacity .2s ease, width .2s ease, background .2s ease;
+  }
+  .hamburger span:nth-child(2){width:13px;align-self:flex-end;margin-right:1px;}
+  .hamburger.open span{background:var(--cream);}
+  .hamburger.open span:nth-child(1){transform:translateY(7.5px) rotate(45deg);width:18px;}
+  .hamburger.open span:nth-child(2){opacity:0;}
+  .hamburger.open span:nth-child(3){transform:translateY(-7.5px) rotate(-45deg);width:18px;}
+
+  /* Off-canvas nav */
+  .nav-overlay{
+    position:fixed;inset:0;
+    background:rgba(42,36,32,.5);
+    backdrop-filter:blur(1px);
+    opacity:0;pointer-events:none;
+    transition:opacity .25s ease;
+    z-index:30;
+  }
+  .nav-overlay.open{opacity:1;pointer-events:auto;}
+
+  .nav-panel{
+    position:fixed;top:0;left:0;bottom:0;
+    width:280px;
+    background:var(--wine);
+    color:var(--cream);
+    padding:28px 0 22px;
+    transform:translateX(-100%);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+    box-shadow:2px 0 24px rgba(0,0,0,.25);
+    z-index:31;
+    display:flex;
+    flex-direction:column;
+    border-right:4px solid var(--gold);
+  }
+  .nav-panel.open{transform:translateX(0);}
+  .nav-panel .brand-word{color:var(--cream);}
+  .nav-panel .brand-sub{color:rgba(247,242,233,.68);letter-spacing:.04em;}
+  .nav-panel-head{
+    padding:0 24px 20px;
+    margin-bottom:6px;
+    border-bottom:1px solid rgba(255,255,255,.18);
+  }
+  .main-nav{display:flex;flex-direction:column;flex:1;padding:10px 14px 0;}
+  .main-nav button{
+    all:unset;
+    display:block;
+    box-sizing:border-box;
+    width:100%;
+    text-align:left;
+    position:relative;
+    padding:14px 10px;
+    font-size:15px;
+    font-family:inherit;
+    color:var(--cream);
+    opacity:1;
+    cursor:pointer;
+    border-bottom:1px solid rgba(255,255,255,.16);
+    transition:background .15s ease, padding-left .15s ease, color .15s ease;
+  }
+  .main-nav button:last-child{border-bottom:none;}
+  .main-nav button:hover{background:rgba(255,255,255,.1);padding-left:16px;}
+  .main-nav button.active{
+    font-weight:600;
+    color:var(--gold);
+    background:rgba(0,0,0,.2);
+    padding-left:16px;
+  }
+  .main-nav button.active::before{
+    content:"";
+    position:absolute;left:0;top:14px;bottom:14px;
+    width:3px;
+    background:var(--gold);
+  }
+  .nav-panel-foot{
+    font-size:11px;
+    opacity:.55;
+    padding:16px 24px 0;
+    border-top:1px solid rgba(255,255,255,.15);
+    margin-top:10px;
+  }
+
+  main{padding:30px 28px 60px; max-width:1000px; margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* Hero */
+  .hero{
+    border-top:5px solid var(--gold);
+    border-bottom:5px solid var(--wine);
+    padding:26px 4px 22px;
+    margin-bottom:8px;
+  }
+  .hero h2{font-size:26px;color:var(--wine-dark);max-width:520px;line-height:1.3;}
+  .hero p{font-size:14px;color:#6f6558;margin-top:9px;max-width:440px;}
+
+  /* Ledger row */
+  .ledger{
+    display:flex;
+    flex-wrap:wrap;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    margin:26px 0 8px;
+  }
+  .ledger-item{
+    flex:1;
+    min-width:150px;
+    padding:16px 20px;
+    border-left:1px solid var(--line);
+  }
+  .ledger-item:first-child{border-left:none;}
+  .ledger-item .lbl{font-size:12px;color:#8a8072;}
+  .ledger-item .val{font-family:'Fraunces',serif;font-size:23px;color:var(--wine-dark);margin-top:4px;}
+  .ledger-item .note{font-size:11.5px;margin-top:5px;color:#4c7a4c;}
+  .ledger-item .note.warn{color:#a13c30;}
+
+  /* Module board */
+  .section-title{font-size:13px;color:#8a8072;margin:36px 0 4px;}
+  .board{border-top:1px solid var(--charcoal);}
+  .board-row{
+    display:flex;
+    align-items:flex-start;
+    gap:16px;
+    padding:16px 2px;
+    border-bottom:1px solid var(--line);
+  }
+  .board-row .num{
+    font-family:'Fraunces',serif;
+    font-size:14px;
+    color:var(--gold);
+    padding-top:2px;
+    width:20px;
+    flex-shrink:0;
+  }
+  .board-row h3{font-size:15.5px;color:var(--wine-dark);margin-bottom:3px;}
+  .board-row p{font-size:13px;color:#6f6558;line-height:1.5;margin:0;max-width:560px;}
+
+  /* Sub-pages */
+  .page-head{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    margin-bottom:20px;
+    padding-bottom:14px;
+    border-bottom:2px solid var(--charcoal);
+  }
+  .page-head h2{font-size:23px;color:var(--wine-dark);}
+  .page-head p{font-size:13px;color:#7a7062;margin-top:4px;}
+  .btn-primary{
+    background:var(--wine);
+    color:var(--cream);
+    border:none;
+    padding:9px 16px;
+    border-radius:6px;
+    font-size:13px;
+    font-weight:500;
+  }
+  .btn-primary:hover{background:var(--wine-dark);}
+
+  table{width:100%;border-collapse:collapse;}
+  th,td{text-align:left;padding:11px 10px;font-size:13.5px;border-bottom:1px solid var(--line);}
+  th{color:#8a8072;font-weight:600;font-size:11.5px;border-bottom:2px solid var(--charcoal);}
+  tr:last-child td{border-bottom:none;}
+  .tag{display:inline-block;padding:2px 9px;border-radius:3px;font-size:11px;font-weight:600;}
+  .tag.ok{background:#e6efe1;color:#3f6b3d;}
+  .tag.wait{background:#f4ecd8;color:#8a6a1f;}
+  .tag.low{background:#f6e2df;color:#a13c30;}
+
+  .empty{
+    text-align:center;
+    padding:50px 20px;
+    color:#8a8072;
+    border:1px dashed var(--line);
+  }
+  .empty h3{color:var(--wine-dark);font-size:16.5px;margin-bottom:6px;font-family:'Fraunces',serif;}
+
+  @media (max-width:520px){
+    main{padding:22px 18px 50px;}
+    .topbar{padding:15px 18px;}
+    .nav-panel{width:82%;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="hamburger" id="hamburger" aria-label="Abrir menú">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="topbar-titles">
+    <h1 id="topbarTitle" style="font-size:19px;">Inicio</h1>
+    <div class="crumb" id="topbarCrumb">SalonFlow ERP / Inicio</div>
+  </div>
+</header>
+
+<div class="nav-overlay" id="navOverlay"></div>
+<nav class="nav-panel" id="navPanel">
+  <div class="nav-panel-head">
+    <div class="brand-word">SalonFlow</div>
+    <div class="brand-sub">ERP · Barrio</div>
+  </div>
+  <div class="main-nav" id="nav">
+    <button data-view="inicio" class="active">Inicio</button>
+    <button data-view="citas">Citas</button>
+    <button data-view="clientes">Clientes</button>
+    <button data-view="inventario">Inventario</button>
+    <button data-view="comisiones">Comisiones</button>
+    <button data-view="reportes">Reportes</button>
+    <button data-view="ia">Recomendaciones IA</button>
+  </div>
+  <div class="nav-panel-foot">SalonFlow ERP · Proyecto académico · UMB 2026</div>
+</nav>
+
+<main>
+
+  <!-- INICIO -->
+  <section class="view active" id="view-inicio">
+    <div class="hero">
+      <h2>Toda tu peluquería, organizada en un solo lugar.</h2>
+      <p>Citas, clientes, inventario y comisiones sin agendas de papel ni hojas de cálculo sueltas.</p>
+    </div>
+
+    <div class="ledger">
+      <div class="ledger-item">
+        <div class="lbl">Citas de hoy</div>
+        <div class="val">12</div>
+      </div>
+      <div class="ledger-item">
+        <div class="lbl">Clientes activos</div>
+        <div class="val">184</div>
+        <div class="note">+6 este mes</div>
+      </div>
+      <div class="ledger-item">
+        <div class="lbl">Ingresos del mes</div>
+        <div class="val">$4.320.000</div>
+        <div class="note">+12% vs mes anterior</div>
+      </div>
+      <div class="ledger-item">
+        <div class="lbl">Stock bajo</div>
+        <div class="val">3</div>
+        <div class="note warn">requieren pedido</div>
+      </div>
+    </div>
+
+    <div class="section-title">Módulos del sistema</div>
+    <div class="board">
+      <div class="board-row">
+        <div class="num">01</div>
+        <div><h3>Citas</h3><p>Agenda, confirma y reprograma citas de clientes por estilista.</p></div>
+      </div>
+      <div class="board-row">
+        <div class="num">02</div>
+        <div><h3>Clientes</h3><p>Historial de servicios, preferencias y datos de contacto.</p></div>
+      </div>
+      <div class="board-row">
+        <div class="num">03</div>
+        <div><h3>Inventario</h3><p>Control de productos, insumos y niveles de stock.</p></div>
+      </div>
+      <div class="board-row">
+        <div class="num">04</div>
+        <div><h3>Comisiones</h3><p>Cálculo automático de comisiones por estilista y servicio.</p></div>
+      </div>
+      <div class="board-row">
+        <div class="num">05</div>
+        <div><h3>Reportes</h3><p>Indicadores de ventas, servicios más solicitados y ocupación.</p></div>
+      </div>
+      <div class="board-row">
+        <div class="num">06</div>
+        <div><h3>Recomendaciones IA</h3><p>Sugerencias generadas a partir del análisis de los datos del negocio.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CITAS -->
+  <section class="view" id="view-citas">
+    <div class="page-head">
+      <div><h2>Citas</h2><p>Agenda del día por estilista.</p></div>
+      <button class="btn-primary">+ Nueva cita</button>
+    </div>
+    <table>
+      <thead><tr><th>Hora</th><th>Cliente</th><th>Servicio</th><th>Estilista</th><th>Estado</th></tr></thead>
+      <tbody>
+        <tr><td>9:00 a.m.</td><td>Laura Gómez</td><td>Corte + barba</td><td>Héctor</td><td><span class="tag ok">Confirmada</span></td></tr>
+        <tr><td>10:30 a.m.</td><td>Andrés Ruiz</td><td>Corte clásico</td><td>Valeri</td><td><span class="tag wait">Pendiente</span></td></tr>
+        <tr><td>11:15 a.m.</td><td>Camila Torres</td><td>Tinte</td><td>Miguel</td><td><span class="tag ok">Confirmada</span></td></tr>
+        <tr><td>1:00 p.m.</td><td>Julián Peña</td><td>Afeitado</td><td>Héctor</td><td><span class="tag wait">Pendiente</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- CLIENTES -->
+  <section class="view" id="view-clientes">
+    <div class="page-head">
+      <div><h2>Clientes</h2><p>Historial y datos de contacto.</p></div>
+      <button class="btn-primary">+ Nuevo cliente</button>
+    </div>
+    <table>
+      <thead><tr><th>Nombre</th><th>Teléfono</th><th>Última visita</th><th>Servicio frecuente</th></tr></thead>
+      <tbody>
+        <tr><td>Laura Gómez</td><td>300 123 4567</td><td>02 sep 2026</td><td>Corte + barba</td></tr>
+        <tr><td>Andrés Ruiz</td><td>301 987 6543</td><td>28 ago 2026</td><td>Corte clásico</td></tr>
+        <tr><td>Camila Torres</td><td>315 456 7890</td><td>15 ago 2026</td><td>Tinte</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- INVENTARIO -->
+  <section class="view" id="view-inventario">
+    <div class="page-head">
+      <div><h2>Inventario</h2><p>Stock de productos e insumos.</p></div>
+      <button class="btn-primary">+ Nuevo producto</button>
+    </div>
+    <table>
+      <thead><tr><th>Producto</th><th>Categoría</th><th>Stock</th><th>Estado</th></tr></thead>
+      <tbody>
+        <tr><td>Cera moldeadora</td><td>Styling</td><td>18</td><td><span class="tag ok">Disponible</span></td></tr>
+        <tr><td>Tinte castaño</td><td>Coloración</td><td>2</td><td><span class="tag low">Stock bajo</span></td></tr>
+        <tr><td>Cuchillas de afeitar</td><td>Insumos</td><td>4</td><td><span class="tag low">Stock bajo</span></td></tr>
+        <tr><td>Shampoo profesional</td><td>Cuidado</td><td>25</td><td><span class="tag ok">Disponible</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- COMISIONES -->
+  <section class="view" id="view-comisiones">
+    <div class="page-head">
+      <div><h2>Comisiones</h2><p>Cálculo del mes por estilista.</p></div>
+    </div>
+    <table>
+      <thead><tr><th>Estilista</th><th>Servicios realizados</th><th>Total generado</th><th>Comisión (30%)</th></tr></thead>
+      <tbody>
+        <tr><td>Héctor Figueroa</td><td>42</td><td>$1.680.000</td><td>$504.000</td></tr>
+        <tr><td>Valeri Atuesta</td><td>36</td><td>$1.440.000</td><td>$432.000</td></tr>
+        <tr><td>Miguel Coronado</td><td>39</td><td>$1.200.000</td><td>$360.000</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- REPORTES -->
+  <section class="view" id="view-reportes">
+    <div class="page-head">
+      <div><h2>Reportes</h2><p>Indicadores generales del negocio.</p></div>
+    </div>
+    <div class="ledger">
+      <div class="ledger-item"><div class="lbl">Servicio más solicitado</div><div class="val" style="font-size:19px;">Corte clásico</div></div>
+      <div class="ledger-item"><div class="lbl">Día más ocupado</div><div class="val" style="font-size:19px;">Sábado</div></div>
+      <div class="ledger-item"><div class="lbl">Ticket promedio</div><div class="val" style="font-size:19px;">$38.500</div></div>
+    </div>
+  </section>
+
+  <!-- IA -->
+  <section class="view" id="view-ia">
+    <div class="page-head">
+      <div><h2>Recomendaciones IA</h2><p>Sugerencias generadas a partir del análisis de los datos del negocio.</p></div>
+    </div>
+    <div class="empty">
+      <h3>Aún no hay recomendaciones</h3>
+      <p>El módulo de IA analizará citas, ventas e inventario para sugerir acciones aquí.</p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  const hamburger = document.getElementById('hamburger');
+  const navPanel = document.getElementById('navPanel');
+  const navOverlay = document.getElementById('navOverlay');
+  const buttons = document.querySelectorAll('#nav button');
+  const views = document.querySelectorAll('.view');
+  const titleEl = document.getElementById('topbarTitle');
+  const crumbEl = document.getElementById('topbarCrumb');
+
+  function toggleMenu(open){
+    hamburger.classList.toggle('open', open);
+    navPanel.classList.toggle('open', open);
+    navOverlay.classList.toggle('open', open);
+  }
+
+  hamburger.addEventListener('click', () => toggleMenu(!navPanel.classList.contains('open')));
+  navOverlay.addEventListener('click', () => toggleMenu(false));
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.view;
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      views.forEach(v => v.classList.remove('active'));
+      document.getElementById('view-' + target).classList.add('active');
+      const label = btn.textContent.trim();
+      titleEl.textContent = label;
+      crumbEl.textContent = 'SalonFlow ERP / ' + label;
+      toggleMenu(false);
+    });
+  });
+</script>
+
+</body>
+</html>
