@@ -5,7 +5,7 @@ Plataforma web para administrar peluquerías y barberías de barrio: agenda de c
 > El módulo de inteligencia artificial está planeado para una fase posterior y no hace parte de este prototipo.
 
 **Equipo:** Hector Figueroa · Valeri Atuesta · Miguel Coronado
-**Materia:** Arquitectura de Software · Universidad Manuela Beltrán · Docente: Jamilton Fernando Benavides
+**Materia:** Arquitectura de Software · Universidad Manuela Beltrán 
 
 ---
 
@@ -53,46 +53,6 @@ Las reglas críticas se validan **dos veces**: en la API (mensaje claro para el 
 ├── FrontEnd/           Prototipo de la fase 2 (HTML/JS con datos simulados, publicado en GitHub Pages)
 └── .github/workflows/  CI: pruebas del backend y build del frontend en cada push
 ```
-
-## Cómo ejecutarlo
-
-> **¿Computador sin nada instalado?** Sigue [`COMO_EJECUTAR.md`](COMO_EJECUTAR.md): doble clic en `INICIAR-WINDOWS.bat` (o `bash iniciar-mac-linux.sh`), o despliegue en línea con Render usando `render.yaml`. Lo de abajo es para desarrollar.
-
-
-### 1. Base de datos (Supabase)
-
-1. Crear un proyecto en [supabase.com](https://supabase.com).
-2. **SQL Editor → New query**: pegar todo `BaseDeDatos/supabase/salonflow_supabase.sql` y **Run**.
-3. Copiar la cadena de conexión: **Connect → Connection string → URI → Session pooler**.
-
-> Alternativa local: PostgreSQL 14+ y ejecutar `01_esquema.sql` y `02_datos_prueba.sql`.
-
-### 2. Backend
-
-```bash
-cd backend
-python -m venv .venv
-# Windows: .venv\Scripts\activate    ·    Mac/Linux: source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env        # completar DATABASE_URL y JWT_SECRET
-uvicorn app.main:app --reload
-```
-
-- API: http://localhost:8000
-- **Documentación interactiva (Swagger):** http://localhost:8000/api/docs
-- Estado: http://localhost:8000/api/health
-
-### 3. Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Abrir http://localhost:5173. En desarrollo, Vite redirige `/api` al backend.
-
-Para producción, `npm run build` genera `frontend/dist`, que el backend entrega directamente en http://localhost:8000 (un solo servidor). Esa carpeta se incluye en el repositorio para poder ejecutar el sistema sin Node.
 
 ### Usuarios de prueba
 
