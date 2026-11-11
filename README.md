@@ -109,3 +109,15 @@ Las 38 pruebas crean una base limpia desde los scripts SQL del repositorio y cub
 |---|---|---|
 | Base de datos | Supabase | Script `salonflow_supabase.sql` |
 | Backend + interfaz | Render (Blueprint con `render.yaml`) | Un solo servicio: la API entrega también `frontend/dist`. Solo hay que pegar `DATABASE_URL`. |
+
+## Lógica de Negocio
+## Tabla 2. Reglas de negocio asociadas a los requerimientos funcionales
+
+| Código | Regla | Requerimientos |
+|--------|-------|----------------|
+| RN-01 | Un estilista no puede tener dos citas cuyos intervalos [inicio, fin) se solapen. | RF-05, RF-06 |
+| RN-02 | Comisión = precio final del servicio × porcentaje del estilista; el porcentaje por defecto es 30 %. | RF-07, RF-11 |
+| RN-03 | Solo una cita en estado «Atendida» genera venta, comisión y descuento de inventario. | RF-07, RF-09, RF-11 |
+| RN-04 | Las existencias de un producto nunca pueden ser negativas. | RF-09 |
+| RN-05 | Los registros con historial (usuarios, clientes, servicios, productos) se desactivan en lugar de eliminarse. | RF-01, RF-03, RF-04, RF-08 |
+| RN-06 | Al servicio de predicción solo se envían indicadores numéricos y un identificador interno; nunca nombres, teléfonos ni correos de clientes. | RF-14 |
