@@ -110,7 +110,7 @@ Las 38 pruebas crean una base limpia desde los scripts SQL del repositorio y cub
 | Base de datos | Supabase | Script `salonflow_supabase.sql` |
 | Backend + interfaz | Render (Blueprint con `render.yaml`) | Un solo servicio: la API entrega también `frontend/dist`. Solo hay que pegar `DATABASE_URL`. |
 
-## Lógica de Negocio
+## Reglas de Negocio
 ## Tabla 2. Reglas de negocio asociadas a los requerimientos funcionales
 
 | Código | Regla | Requerimientos |
