@@ -5,7 +5,7 @@ Arquitectura por capas:
     services/      → aplicación (reglas de negocio)
     repositories/  → datos (consultas SQL / SQLAlchemy)
 
-Si existe la interfaz compilada (frontend/dist), este mismo servidor la entrega:
+Si existe la interfaz compilada (FrontEnd/dist), este mismo servidor la entrega:
 así todo el sistema corre con un solo proceso y una sola dirección.
 """
 import logging
@@ -53,7 +53,8 @@ def health():
 # ---------------------------------------------------------------------
 # Interfaz web compilada (React). Se registra al final para no tapar la API.
 # ---------------------------------------------------------------------
-DIST = Path(os.environ.get("FRONTEND_DIST", Path(__file__).resolve().parents[2] / "frontend" / "dist")).resolve()
+# La carpeta del repositorio se llama "FrontEnd": en Linux (Render, GitHub Actions) importan las mayúsculas.
+DIST = Path(os.environ.get("FRONTEND_DIST") or Path(__file__).resolve().parents[2] / "FrontEnd" / "dist").resolve()
 
 if (DIST / "index.html").is_file():
     app.mount("/assets", StaticFiles(directory=DIST / "assets"), name="assets")
@@ -67,4 +68,4 @@ if (DIST / "index.html").is_file():
             return FileResponse(archivo)
         return FileResponse(DIST / "index.html")  # rutas de React (/citas, /clientes…)
 else:
-    logging.getLogger("salonflow").info("No se encontró frontend/dist: solo se sirve la API.")
+    logging.getLogger("salonflow").info("No se encontró FrontEnd/dist: solo se sirve la API.")

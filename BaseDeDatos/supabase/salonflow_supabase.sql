@@ -17,7 +17,7 @@ SET timezone TO 'America/Bogota';
 -- El script se puede volver a ejecutar: borra y recrea todos los objetos.
 -- =====================================================================
 
-DROP FUNCTION IF EXISTS fn_recomendaciones(DATE) CASCADE;  -- versión anterior (módulo de IA retirado)
+DROP FUNCTION IF EXISTS fn_recomendaciones(DATE) CASCADE;  -- versión anterior, reemplazada por el servicio de IA (ia/)
 DROP FUNCTION IF EXISTS fn_ocupacion_semanal(DATE, DATE) CASCADE;
 DROP FUNCTION IF EXISTS fn_servicios_populares(DATE, DATE) CASCADE;
 DROP FUNCTION IF EXISTS fn_reporte_resumen(DATE, DATE) CASCADE;

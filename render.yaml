@@ -1,0 +1,49 @@
+# Despliegue en Render (Blueprint): New > Blueprint > seleccionar este repositorio.
+# La base de datos está en Supabase (ejecutar BaseDeDatos/supabase/salonflow_supabase.sql).
+#
+# Después de crear los servicios, completar en el panel de Render:
+#   salonflow-api > Environment > DATABASE_URL  (cadena de conexión de Supabase)
+#   salonflow-api > Environment > IA_URL        (URL pública de salonflow-ia, p. ej. https://salonflow-ia.onrender.com)
+services:
+  # API REST + interfaz web compilada (FrontEnd/dist) en un solo servicio.
+  - type: web
+    name: salonflow-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: IA_URL
+        sync: false
+      - key: IA_API_KEY            # la misma clave que genera el servicio de IA
+        fromService:
+          type: web
+          name: salonflow-ia
+          envVarKey: IA_API_KEY
+
+  # Servicio de IA: red neuronal (TensorFlow) publicada con FastAPI. Solo lo llama la API.
+  # TensorFlow usa bastante memoria: si el plan free (512 MB) no alcanza, usar el plan starter
+  # (riesgo R-04 del Documento Maestro).
+  - type: web
+    name: salonflow-ia
+    runtime: python
+    plan: free
+    rootDir: ia
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: TF_CPP_MIN_LOG_LEVEL
+        value: "2"
+      - key: IA_API_KEY
+        generateValue: true

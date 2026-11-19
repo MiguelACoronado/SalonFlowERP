@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 
 from preprocesamiento import COLUMNAS, UMBRAL_RIESGO, VERSION_MODELO, normalizar
 
-RUTA_MODELO = Path(os.getenv("MODELO_PATH", Path(__file__).resolve().parent / "modelo_riesgo.keras"))
+RUTA_MODELO = Path(os.getenv("MODELO_PATH") or Path(__file__).resolve().parent / "modelo_riesgo.keras")
 # Si se define IA_API_KEY, el servicio exige el encabezado X-API-Key (solo la API de SalonFlow lo conoce).
 API_KEY = os.getenv("IA_API_KEY", "")
 NOTA = ("Resultado demostrativo de un modelo entrenado con datos sintéticos. "
