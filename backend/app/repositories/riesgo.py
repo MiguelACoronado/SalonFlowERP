@@ -40,7 +40,7 @@ def lista(db: Session, fecha: date, solo_en_riesgo: bool = True) -> list[dict]:
                p.dias_desde_ultima, p.intervalo_promedio, p.num_visitas, p.gasto_promedio,
                p.probabilidad, p.en_riesgo, p.version_modelo, p.contactado, p.contactado_en,
                p.fecha_calculo
-        FROM prediccion_riesgo p JOIN clientes c ON c.id = p.cliente_id
+        FROM prediccion_riesgo p JOIN clientes c ON c.id = p.cliente_id AND c.autoriza_datos
         WHERE p.fecha_calculo = :f AND (:todos OR p.en_riesgo)
         ORDER BY p.probabilidad DESC, c.nombre"""
     return [dict(r) for r in db.execute(text(sql), {"f": fecha, "todos": not solo_en_riesgo}).mappings()]
@@ -51,6 +51,11 @@ def resumen(db: Session, fecha: date) -> dict:
                     max(version_modelo) AS version_modelo
              FROM prediccion_riesgo WHERE fecha_calculo = :f"""
     return dict(db.execute(text(sql), {"f": fecha}).mappings().one())
+
+
+def borrar_de_cliente(db: Session, cliente_id: int) -> None:
+    """Supresión de las predicciones de un cliente que revocó su autorización."""
+    db.execute(delete(PrediccionRiesgo).where(PrediccionRiesgo.cliente_id == cliente_id))
 
 
 def obtener(db: Session, prediccion_id: int) -> PrediccionRiesgo | None:

@@ -86,8 +86,9 @@ INSERT INTO _clientes_seed (nombre, telefono, frecuente, dias) VALUES
   ('Sebastián Vargas', '304 733 9024', 'Afeitado',       NULL),
   ('Daniela Moreno',   '321 196 4408', 'Corte clásico',  NULL);
 
-INSERT INTO clientes (nombre, telefono, servicio_frecuente_id)
-SELECT c.nombre, c.telefono, s.id
+-- Todos los clientes de prueba aceptaron el aviso de privacidad 1.0 al registrarse.
+INSERT INTO clientes (nombre, telefono, servicio_frecuente_id, autoriza_datos, fecha_autorizacion, version_politica)
+SELECT c.nombre, c.telefono, s.id, TRUE, now() - interval '120 days', '1.0'
 FROM _clientes_seed c JOIN servicios s ON s.nombre = c.frecuente
 ORDER BY c.orden;
 

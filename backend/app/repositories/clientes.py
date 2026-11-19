@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 from app.models import Cliente
 
 _COLUMNAS = ("SELECT v.id, v.nombre, v.telefono, c.servicio_frecuente_id, v.servicio_frecuente, "
-             "v.ultima_visita, v.dias_sin_visita FROM v_clientes v JOIN clientes c ON c.id = v.id")
+             "v.ultima_visita, v.dias_sin_visita, c.autoriza_datos, c.fecha_autorizacion, c.version_politica "
+             "FROM v_clientes v JOIN clientes c ON c.id = v.id")
 
 
 def listar(db: Session, texto: str | None = None) -> list[dict]:

@@ -6,12 +6,20 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import ADMIN, RECEPCION, requiere_roles
 from app.schemas.citas import CitaOut
-from app.schemas.clientes import ClienteActualizar, ClienteCrear, ClienteOut
+from app.core.privacidad import aviso_privacidad
+from app.schemas.clientes import AvisoPrivacidad, ClienteActualizar, ClienteCrear, ClienteOut
 from app.services import clientes as servicio
 
 router = APIRouter(prefix="/clientes", tags=["Clientes"])
 DB = Annotated[Session, Depends(get_db)]
 Personal = Annotated[object, Depends(requiere_roles(ADMIN, RECEPCION))]
+
+
+# Va antes de /{cliente_id} para que "aviso-privacidad" no se lea como un id.
+@router.get("/aviso-privacidad", response_model=AvisoPrivacidad,
+            summary="Aviso de privacidad que se le lee al cliente antes de registrarlo (Ley 1581, art. 12)")
+def aviso(_: Personal):
+    return aviso_privacidad()
 
 
 @router.get("", response_model=list[ClienteOut], summary="Listar o buscar por nombre/teléfono")

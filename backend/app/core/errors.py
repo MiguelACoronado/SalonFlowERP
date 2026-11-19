@@ -54,6 +54,7 @@ MENSAJES_RESTRICCIONES = {
     "usuarios_estilista_id_key": "Ese estilista ya tiene un usuario asignado.",
     "productos_nombre_key": "Ya existe un producto con ese nombre.",
     "servicios_nombre_key": "Ya existe un servicio con ese nombre.",
+    "ck_clientes_prueba_autorizacion": "La autorización de datos debe tener fecha y versión del aviso.",
 }
 
 MENSAJES_PYDANTIC = {

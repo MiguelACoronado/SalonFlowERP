@@ -75,7 +75,14 @@ CREATE TABLE clientes (
     nombre                 VARCHAR(120) NOT NULL CHECK (trim(nombre) <> ''),
     telefono               VARCHAR(20)  NOT NULL,
     servicio_frecuente_id  INT          REFERENCES servicios(id) ON DELETE SET NULL,
-    creado_en              TIMESTAMPTZ  NOT NULL DEFAULT now()
+    -- Ley 1581 de 2012, arts. 9 y 12: autorización previa, expresa e informada del cliente,
+    -- con prueba de cuándo la dio y de qué versión del aviso de privacidad aceptó.
+    autoriza_datos         BOOLEAN      NOT NULL DEFAULT FALSE,
+    fecha_autorizacion     TIMESTAMPTZ,
+    version_politica       VARCHAR(10),
+    creado_en              TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    CONSTRAINT ck_clientes_prueba_autorizacion
+        CHECK (NOT autoriza_datos OR (fecha_autorizacion IS NOT NULL AND version_politica IS NOT NULL))
 );
 -- Equivale a Cliente.existe(): no se permiten dos clientes con el mismo nombre
 -- (sin distinguir mayúsculas ni espacios al inicio/final).
@@ -206,16 +213,18 @@ LEFT JOIN LATERAL (
 -- (la cita atendida es la venta, RN-03). Solo clientes con al menos dos
 -- visitas: con una sola no existe intervalo promedio.
 -- No incluye nombre ni teléfono: es exactamente lo que se envía al servicio (RN-06).
+-- Solo clientes que autorizaron el tratamiento de sus datos (Ley 1581, principio de libertad).
 CREATE VIEW v_indicadores_rfm WITH (security_invoker = true) AS
-SELECT cliente_id,
-       CURRENT_DATE - max(fecha)                                       AS dias_desde_ultima,
-       round(GREATEST((max(fecha) - min(fecha))::numeric / (count(*) - 1), 1), 2)
+SELECT ci.cliente_id,
+       CURRENT_DATE - max(ci.fecha)                                    AS dias_desde_ultima,
+       round(GREATEST((max(ci.fecha) - min(ci.fecha))::numeric / (count(*) - 1), 1), 2)
                                                                        AS intervalo_promedio,
        count(*)::int                                                   AS num_visitas,
-       round(avg(precio), 2)                                           AS gasto_promedio
-FROM citas
-WHERE estado = 'Atendida'
-GROUP BY cliente_id
+       round(avg(ci.precio), 2)                                        AS gasto_promedio
+FROM citas ci
+JOIN clientes cl ON cl.id = ci.cliente_id AND cl.autoriza_datos
+WHERE ci.estado = 'Atendida'
+GROUP BY ci.cliente_id
 HAVING count(*) >= 2;
 
 -- Resultado de cada cálculo: guarda las entradas enviadas, la probabilidad y la

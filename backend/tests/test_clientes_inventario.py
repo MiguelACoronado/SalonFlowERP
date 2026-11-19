@@ -3,7 +3,7 @@ API = "/api/v1"
 
 def test_crear_cliente_normaliza_telefono(client, recepcion):
     r = client.post(f"{API}/clientes", json={"nombre": "  Ana   María Ruiz ", "telefono": "3001112233",
-                                              "servicio_frecuente_id": 1}, headers=recepcion)
+                                              "servicio_frecuente_id": 1, "autoriza_datos": True}, headers=recepcion)
     assert r.status_code == 201
     assert r.json()["nombre"] == "Ana María Ruiz"
     assert r.json()["telefono"] == "300 111 2233"
@@ -11,12 +11,14 @@ def test_crear_cliente_normaliza_telefono(client, recepcion):
 
 
 def test_cliente_repetido_sin_importar_mayusculas(client, recepcion):
-    r = client.post(f"{API}/clientes", json={"nombre": "laura gómez", "telefono": "3000000000"}, headers=recepcion)
+    r = client.post(f"{API}/clientes", json={"nombre": "laura gómez", "telefono": "3000000000",
+                                              "autoriza_datos": True}, headers=recepcion)
     assert r.status_code == 409
 
 
 def test_cliente_datos_invalidos(client, recepcion):
-    r = client.post(f"{API}/clientes", json={"nombre": "J4", "telefono": "12"}, headers=recepcion)
+    r = client.post(f"{API}/clientes", json={"nombre": "J4", "telefono": "12", "autoriza_datos": True},
+                    headers=recepcion)
     assert r.status_code == 422
     assert {e["campo"] for e in r.json()["errores"]} == {"nombre", "telefono"}
 

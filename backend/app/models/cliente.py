@@ -13,6 +13,9 @@ class Cliente(Base):
     nombre: Mapped[str] = mapped_column(String(120))
     telefono: Mapped[str] = mapped_column(String(20))
     servicio_frecuente_id: Mapped[int | None] = mapped_column(ForeignKey("servicios.id"))
+    autoriza_datos: Mapped[bool] = mapped_column(default=False)
+    fecha_autorizacion: Mapped[datetime | None]
+    version_politica: Mapped[str | None] = mapped_column(String(10))
     creado_en: Mapped[datetime] = mapped_column(server_default="now()")
 
     servicio_frecuente: Mapped[Servicio | None] = relationship(lazy="joined")

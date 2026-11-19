@@ -21,6 +21,10 @@ class Settings(BaseSettings):
 
     zona_horaria: str = "America/Bogota"
 
+    # Responsable del tratamiento de datos (el salón). Aparece en el aviso de privacidad (Ley 1581, art. 12).
+    responsable_nombre: str = "SalonFlow (salón de demostración)"
+    responsable_contacto: str = "privacidad@salonflow.co"
+
     # Servicio de IA de clientes en riesgo (carpeta ia/ del repositorio).
     ia_url: str = "http://127.0.0.1:8001"
     ia_api_key: str = ""            # si el servicio define IA_API_KEY, poner aquí la misma clave
