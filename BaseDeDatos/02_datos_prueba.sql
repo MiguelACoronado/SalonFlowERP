@@ -6,7 +6,7 @@
 -- Ejecutar después de 01_esquema.sql.
 -- =====================================================================
 
-TRUNCATE usuarios, movimientos_inventario, productos, categorias_producto,
+TRUNCATE prediccion_riesgo, usuarios, movimientos_inventario, productos, categorias_producto,
          citas, clientes, servicios, estilistas, configuracion
          RESTART IDENTITY CASCADE;
 

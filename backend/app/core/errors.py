@@ -42,6 +42,10 @@ class Prohibido(AppError):
     status_code = 403
 
 
+class ServicioNoDisponible(AppError):
+    status_code = 503
+
+
 # Mensajes amigables para las restricciones definidas en la base de datos.
 MENSAJES_RESTRICCIONES = {
     "ux_citas_sin_cruce": "El estilista ya tiene una cita activa en ese horario.",

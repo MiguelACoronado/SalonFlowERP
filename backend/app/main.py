@@ -21,7 +21,7 @@ from sqlalchemy import text
 from app.core.config import get_settings
 from app.core.database import engine
 from app.core.errors import registrar_manejadores
-from app.routers import auth, catalogo, citas, clientes, inventario, reportes, usuarios
+from app.routers import auth, catalogo, citas, clientes, inventario, reportes, riesgo, usuarios
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 settings = get_settings()
@@ -39,7 +39,7 @@ app.add_middleware(CORSMiddleware, allow_origins=settings.lista_cors, allow_cred
                    allow_methods=["*"], allow_headers=["*"])
 registrar_manejadores(app)
 
-for r in (auth, usuarios, catalogo, clientes, citas, inventario, reportes):
+for r in (auth, usuarios, catalogo, clientes, citas, inventario, reportes, riesgo):
     app.include_router(r.router, prefix="/api/v1")
 
 

@@ -22,7 +22,8 @@ DROP FUNCTION IF EXISTS fn_ocupacion_semanal(DATE, DATE) CASCADE;
 DROP FUNCTION IF EXISTS fn_servicios_populares(DATE, DATE) CASCADE;
 DROP FUNCTION IF EXISTS fn_reporte_resumen(DATE, DATE) CASCADE;
 DROP FUNCTION IF EXISTS fn_comisiones(DATE, DATE) CASCADE;
-DROP TABLE IF EXISTS usuarios, movimientos_inventario, productos, categorias_producto,
+DROP VIEW IF EXISTS v_indicadores_rfm CASCADE;
+DROP TABLE IF EXISTS prediccion_riesgo, usuarios, movimientos_inventario, productos, categorias_producto,
                      citas, clientes, servicios, estilistas, configuracion CASCADE;
 DROP FUNCTION IF EXISTS trg_citas_precio() CASCADE;
 DROP FUNCTION IF EXISTS trg_movimiento_aplicar() CASCADE;
@@ -209,6 +210,46 @@ LEFT JOIN LATERAL (
     WHERE cliente_id = cl.id AND estado = 'Atendida'
 ) uv ON TRUE;
 
+-- =====================================================================
+-- SERVICIO DE IA: clientes en riesgo de no volver (RF-14)
+-- =====================================================================
+
+-- Entradas del modelo (análisis RFM), calculadas con las citas atendidas
+-- (la cita atendida es la venta, RN-03). Solo clientes con al menos dos
+-- visitas: con una sola no existe intervalo promedio.
+-- No incluye nombre ni teléfono: es exactamente lo que se envía al servicio (RN-06).
+CREATE VIEW v_indicadores_rfm WITH (security_invoker = true) AS
+SELECT cliente_id,
+       CURRENT_DATE - max(fecha)                                       AS dias_desde_ultima,
+       round(GREATEST((max(fecha) - min(fecha))::numeric / (count(*) - 1), 1), 2)
+                                                                       AS intervalo_promedio,
+       count(*)::int                                                   AS num_visitas,
+       round(avg(precio), 2)                                           AS gasto_promedio
+FROM citas
+WHERE estado = 'Atendida'
+GROUP BY cliente_id
+HAVING count(*) >= 2;
+
+-- Resultado de cada cálculo: guarda las entradas enviadas, la probabilidad y la
+-- versión del modelo para poder revisar después cada predicción.
+CREATE TABLE prediccion_riesgo (
+    id                  SERIAL        PRIMARY KEY,
+    cliente_id          INT           NOT NULL REFERENCES clientes(id),
+    fecha_calculo       DATE          NOT NULL DEFAULT CURRENT_DATE,
+    dias_desde_ultima   INT           NOT NULL CHECK (dias_desde_ultima >= 0),
+    intervalo_promedio  NUMERIC(8,2)  NOT NULL CHECK (intervalo_promedio > 0),
+    num_visitas         INT           NOT NULL CHECK (num_visitas >= 2),
+    gasto_promedio      NUMERIC(12,2) NOT NULL CHECK (gasto_promedio >= 0),
+    probabilidad        NUMERIC(5,4)  NOT NULL CHECK (probabilidad BETWEEN 0 AND 1),
+    en_riesgo           BOOLEAN       NOT NULL,
+    version_modelo      VARCHAR(20)   NOT NULL,
+    contactado          BOOLEAN       NOT NULL DEFAULT FALSE,
+    contactado_en       TIMESTAMPTZ,
+    calculado_en        TIMESTAMPTZ   NOT NULL DEFAULT now(),
+    CONSTRAINT ux_prediccion_cliente_fecha UNIQUE (cliente_id, fecha_calculo)
+);
+CREATE INDEX ix_prediccion_fecha ON prediccion_riesgo (fecha_calculo DESC);
+
 -- Inventario (InventarioView) con el estado calculado (Producto.estado).
 CREATE VIEW v_productos WITH (security_invoker = true) AS
 SELECT p.id, p.nombre, cp.nombre AS categoria, p.stock, p.minimo,
@@ -317,6 +358,7 @@ ALTER TABLE clientes               ENABLE ROW LEVEL SECURITY;
 ALTER TABLE citas                  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE productos              ENABLE ROW LEVEL SECURITY;
 ALTER TABLE movimientos_inventario ENABLE ROW LEVEL SECURITY;
+ALTER TABLE prediccion_riesgo      ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================================
 -- SalonFlow ERP · Datos de prueba
@@ -326,7 +368,7 @@ ALTER TABLE movimientos_inventario ENABLE ROW LEVEL SECURITY;
 -- Ejecutar después de 01_esquema.sql.
 -- =====================================================================
 
-TRUNCATE usuarios, movimientos_inventario, productos, categorias_producto,
+TRUNCATE prediccion_riesgo, usuarios, movimientos_inventario, productos, categorias_producto,
          citas, clientes, servicios, estilistas, configuracion
          RESTART IDENTITY CASCADE;
 

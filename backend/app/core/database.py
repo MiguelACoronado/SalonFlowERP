@@ -24,6 +24,10 @@ def _zona_horaria(dbapi_conn, _record):
     # CURRENT_DATE en las vistas y funciones debe ser la fecha de Colombia.
     with dbapi_conn.cursor() as cur:
         cur.execute(f"SET TIME ZONE '{settings.zona_horaria}'")
+    # Sin commit, el SET queda en una transacción que el pool deshace al devolver la
+    # conexión, y desde ahí CURRENT_DATE vuelve a ser la fecha UTC (de 7 p. m. a medianoche
+    # en Colombia daba el día siguiente).
+    dbapi_conn.commit()
 
 
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)

@@ -11,6 +11,7 @@ from app.repositories import catalogo as repo_catalogo
 from app.repositories import clientes as repo_clientes
 from app.repositories import inventario as repo_inventario
 from app.repositories import reportes as repo
+from app.services.riesgo import contar_en_riesgo
 
 DIAS_MAX_RANGO = 366
 
@@ -73,5 +74,7 @@ def tablero(db: Session, usuario) -> dict:
         datos["clientes_total"] = len(repo_clientes.listar(db))
         datos["clientes_inactivos"] = len(repo_clientes.inactivos(db, dias_inactividad))
         datos["productos_stock_bajo"] = len(repo_inventario.listar(db, solo_bajos=True))
+        # Último cálculo del servicio de IA (no lo llama: el tablero no depende de él).
+        datos["clientes_en_riesgo"] = contar_en_riesgo(db)
         datos["mes"] = repo.resumen(db, dia - timedelta(days=29), dia)
     return datos

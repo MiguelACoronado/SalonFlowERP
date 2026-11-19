@@ -21,6 +21,11 @@ class Settings(BaseSettings):
 
     zona_horaria: str = "America/Bogota"
 
+    # Servicio de IA de clientes en riesgo (carpeta ia/ del repositorio).
+    ia_url: str = "http://127.0.0.1:8001"
+    ia_api_key: str = ""            # si el servicio define IA_API_KEY, poner aquí la misma clave
+    ia_timeout_segundos: float = 10  # Tabla 8: tiempo máximo de espera de 10 s
+
     @property
     def sqlalchemy_url(self) -> str:
         """SQLAlchemy necesita el prefijo del driver psycopg 3."""
