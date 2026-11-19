@@ -1,0 +1,10 @@
+# Servicio de IA de SalonFlow (Python 3.10-3.12)
+tensorflow==2.21.0
+numpy==2.5.5
+fastapi==0.165.0
+uvicorn[standard]==0.54.0
+pydantic==2.14.3
+
+# Solo para las pruebas
+pytest
+httpx

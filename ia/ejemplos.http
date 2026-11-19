@@ -1,0 +1,22 @@
+### Peticiones de ejemplo (extensión REST Client de VS Code, o copiarlas en /docs)
+@base = http://127.0.0.1:8001
+
+### Estado del servicio
+GET {{base}}/
+
+### Predicción en lote (ejemplo de la Tabla 8 del Documento Maestro)
+POST {{base}}/predecir
+Content-Type: application/json
+
+{
+  "clientes": [
+    { "ref": 1042, "dias_desde_ultima": 63, "intervalo_promedio": 21, "num_visitas": 9, "gasto_promedio": 38000 },
+    { "ref": 1077, "dias_desde_ultima": 12, "intervalo_promedio": 30, "num_visitas": 4, "gasto_promedio": 25000 }
+  ]
+}
+
+### Error de validación: una sola visita (no existe intervalo promedio) -> 422
+POST {{base}}/predecir
+Content-Type: application/json
+
+{ "clientes": [ { "ref": 5, "dias_desde_ultima": 10, "intervalo_promedio": 20, "num_visitas": 1, "gasto_promedio": 30000 } ] }
