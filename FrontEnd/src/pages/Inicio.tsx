@@ -1,9 +1,10 @@
-import { CalendarDays, CircleCheck, Clock, Plus, TrendingUp, TriangleAlert } from 'lucide-react'
+import { CalendarDays, CircleCheck, Clock, Plus, TrendingUp, TriangleAlert, UserRoundX } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
 import { DetalleCita, NuevaCita } from '../components/Citas'
+import ClientesEnRiesgo from '../components/ClientesEnRiesgo'
 import Tablero from '../components/Tablero'
 import { Alerta, Cargando, Encabezado, Franja, Stat, useAviso } from '../components/ui'
 import { useApi } from '../components/useApi'
@@ -50,6 +51,10 @@ export default function Inicio() {
           <Stat icono={<TriangleAlert />} etiqueta="Por reponer" valor={t.productos_stock_bajo} alerta={t.productos_stock_bajo > 0}
             nota={t.productos_stock_bajo ? <Link className="enlace" to="/inventario">Ver inventario</Link> : 'Inventario al día'} />
         )}
+        {tiene('admin') && t.clientes_en_riesgo != null && (
+          <Stat icono={<UserRoundX />} etiqueta="Clientes en riesgo" valor={t.clientes_en_riesgo} alerta={t.clientes_en_riesgo > 0}
+            nota={<a className="enlace" href="#riesgo">Ver lista</a>} />
+        )}
       </Franja>
 
       <div className="seccion-titulo">
@@ -60,6 +65,8 @@ export default function Inicio() {
         !agenda.datos || !estilistas.datos ? <Cargando /> :
           <Tablero citas={agenda.datos} estilistas={sillas} fecha={hoyISO()} onAbrir={setAbierta}
             onHueco={puedeAgendar ? (id, hora) => setNueva({ fecha: hoyISO(), estilista_id: id, hora }) : undefined} />}
+
+      {tiene('admin') && <ClientesEnRiesgo onCambio={tablero.recargar} />}
 
       {abierta && <DetalleCita cita={abierta} onCerrar={() => setAbierta(null)} onCambio={recargarTodo} />}
       {nueva && (

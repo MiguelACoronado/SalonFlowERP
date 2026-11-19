@@ -64,7 +64,31 @@ export interface Tablero {
   clientes_total?: number
   clientes_inactivos?: number
   productos_stock_bajo?: number
+  clientes_en_riesgo?: number | null
   mes?: { ingresos: number; servicios_realizados: number; ticket_promedio: number }
 }
 
 export interface ErrorCampo { campo: string; mensaje: string }
+
+export interface ClienteEnRiesgo {
+  id: number
+  cliente_id: number
+  cliente: string
+  telefono: string
+  dias_desde_ultima: number
+  intervalo_promedio: string
+  num_visitas: number
+  gasto_promedio: string
+  probabilidad: string
+  contactado: boolean
+  contactado_en: string | null
+}
+export interface ClientesEnRiesgo {
+  fecha_calculo: string | null
+  actualizada: boolean
+  version_modelo: string | null
+  evaluados: number
+  en_riesgo: number
+  aviso: string | null
+  clientes: ClienteEnRiesgo[]
+}

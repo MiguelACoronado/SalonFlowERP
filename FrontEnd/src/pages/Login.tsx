@@ -40,6 +40,9 @@ export default function Login() {
       <div className="login-arte">
         <h1>Tu barbería, al día.</h1>
         <p>Agenda por silla, clientes, inventario, comisiones y reportes en un solo lugar.</p>
+        <ul className="login-chips" aria-hidden>
+          <li>Agenda por silla</li><li>Clientes</li><li>Inventario</li><li>Comisiones</li><li>Reportes</li>
+        </ul>
       </div>
       <form className="login-form" onSubmit={enviar} noValidate>
         <div className="marca" style={{ padding: 0 }}>
