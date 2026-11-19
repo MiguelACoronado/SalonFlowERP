@@ -62,29 +62,63 @@ ORDER BY p.orden;
 
 -- ---------------------------------------------------------------------
 -- Clientes
--- Los 6 primeros son los del prototipo. "dias" = días desde su última
--- visita (en el mock, respecto al 21-sep: Laura 19, Andrés 24, Camila 37,
--- Julián 11, Sofía 53, Daniel 5). Los demás son clientes habituales
--- adicionales para que el historial y los reportes tengan volumen.
+-- Cada cliente tiene un "ritmo" (cada cuántos días suele venir) y "dias"
+-- (días desde su última visita). Así el historial se parece al de un salón
+-- real: un cliente fijo viene cada 2 a 6 semanas, no todos los días.
+--
+-- Los 6 primeros son los del prototipo, con sus días sin venir del mock
+-- (respecto al 21-sep: Laura 19, Andrés 24, Camila 37, Julián 11, Sofía 53,
+-- Daniel 5). Sofía lleva más del doble de su ritmo sin venir: es el caso
+-- de cliente en riesgo de la demo. Los 10 siguientes son clientes fijos.
 -- ---------------------------------------------------------------------
-CREATE TEMP TABLE _clientes_seed (orden SERIAL, nombre TEXT, telefono TEXT, frecuente TEXT, dias INT);
-INSERT INTO _clientes_seed (nombre, telefono, frecuente, dias) VALUES
-  ('Laura Gómez',      '300 123 4567', 'Corte + barba',    19),
-  ('Andrés Ruiz',      '301 987 6543', 'Corte clásico',    24),
-  ('Camila Torres',    '315 456 7890', 'Tinte',            37),
-  ('Julián Peña',      '310 222 3344', 'Afeitado',         11),
-  ('Sofía Marín',      '320 555 1122', 'Lavado y peinado', 53),
-  ('Daniel Castro',    '311 808 9090', 'Corte clásico',     5),
-  ('Mateo Rincón',     '312 401 7781', 'Corte clásico',  NULL),
-  ('Valentina Rojas',  '314 662 0193', 'Tinte',          NULL),
-  ('Santiago León',    '316 230 4471', 'Corte + barba',  NULL),
-  ('Paula Herrera',    '318 975 3302', 'Lavado y peinado', NULL),
-  ('Felipe Cárdenas',  '305 118 2290', 'Corte clásico',  NULL),
-  ('Natalia Suárez',   '317 640 8815', 'Tinte',          NULL),
-  ('Juan Pablo Díaz',  '313 509 6627', 'Corte + barba',  NULL),
-  ('Mariana Ospina',   '319 284 1150', 'Corte clásico',  NULL),
-  ('Sebastián Vargas', '304 733 9024', 'Afeitado',       NULL),
-  ('Daniela Moreno',   '321 196 4408', 'Corte clásico',  NULL);
+CREATE TEMP TABLE _clientes_seed (orden SERIAL, nombre TEXT, telefono TEXT, frecuente TEXT, dias INT, ritmo INT);
+INSERT INTO _clientes_seed (nombre, telefono, frecuente, dias, ritmo) VALUES
+  ('Laura Gómez',      '300 123 4567', 'Corte + barba',    19, 21),
+  ('Andrés Ruiz',      '301 987 6543', 'Corte clásico',    24, 18),
+  ('Camila Torres',    '315 456 7890', 'Tinte',            37, 42),
+  ('Julián Peña',      '310 222 3344', 'Afeitado',         11, 14),
+  ('Sofía Marín',      '320 555 1122', 'Lavado y peinado', 53, 20),
+  ('Daniel Castro',    '311 808 9090', 'Corte clásico',     5, 15),
+  ('Mateo Rincón',     '312 401 7781', 'Corte clásico',     8, 16),
+  ('Valentina Rojas',  '314 662 0193', 'Tinte',            20, 35),
+  ('Santiago León',    '316 230 4471', 'Corte + barba',     3, 14),
+  ('Paula Herrera',    '318 975 3302', 'Lavado y peinado', 12, 21),
+  ('Felipe Cárdenas',  '305 118 2290', 'Corte clásico',    15, 20),
+  ('Natalia Suárez',   '317 640 8815', 'Tinte',            30, 45),
+  ('Juan Pablo Díaz',  '313 509 6627', 'Corte + barba',     6, 12),
+  ('Mariana Ospina',   '319 284 1150', 'Corte clásico',    17, 28),
+  ('Sebastián Vargas', '304 733 9024', 'Afeitado',          2, 10),
+  ('Daniela Moreno',   '321 196 4408', 'Corte clásico',    22, 30);
+
+-- 200 clientes más, generados de forma determinista (siempre los mismos).
+-- Ritmo entre 10 y 45 días. Según su número: 15 % dejó de venir (lleva entre
+-- 2,2 y 4 veces su ritmo sin venir), 10 % va algo atrasado (1,2 a 1,9 veces)
+-- y el resto está al día. Nombres de tres palabras y teléfonos 322 … para
+-- no repetir los anteriores.
+INSERT INTO _clientes_seed (nombre, telefono, frecuente, dias, ritmo)
+SELECT n.nombre || ' ' || a1.apellido || ' ' || a2.apellido,
+       '322 ' || to_char(100 + g.i, 'FM000') || ' ' || to_char((g.i * 7919) % 10000, 'FM0000'),
+       (ARRAY['Corte clásico', 'Corte clásico', 'Corte + barba', 'Corte + barba', 'Afeitado',
+              'Tinte', 'Lavado y peinado', 'Corte clásico'])[g.h % 8 + 1],
+       CASE WHEN g.h % 100 < 15 THEN LEAST(120, g.ritmo * (22 + g.h % 19) / 10)
+            WHEN g.h % 100 < 25 THEN g.ritmo * (12 + g.h % 8) / 10
+            ELSE 1 + (g.h / 100) % g.ritmo END,
+       g.ritmo
+FROM (SELECT i, abs(hashtext('cliente-' || i)) AS h, 10 + abs(hashtext('ritmo-' || i)) % 36 AS ritmo
+      FROM generate_series(0, 199) i) g
+JOIN (SELECT row_number() OVER () - 1 AS k, nombre FROM unnest(ARRAY[
+        'Alejandro', 'Ana', 'Carlos', 'Carolina', 'David', 'Diana', 'Esteban', 'Gabriela',
+        'Jorge', 'Isabella', 'Kevin', 'Juliana', 'Luis', 'Lorena', 'Nicolás', 'Manuela',
+        'Óscar', 'Paola', 'Ricardo', 'Tatiana']) nombre) n ON n.k = g.i % 20
+JOIN (SELECT row_number() OVER () - 1 AS k, apellido FROM unnest(ARRAY[
+        'Acosta', 'Barrera', 'Cifuentes', 'Duarte', 'Escobar', 'Franco', 'Guerrero', 'Hurtado',
+        'Jaramillo', 'Londoño', 'Mejía', 'Navarro', 'Orozco', 'Pineda', 'Quintero', 'Restrepo',
+        'Salazar', 'Téllez', 'Uribe', 'Zapata']) apellido) a1 ON a1.k = (g.i / 20) % 20
+JOIN (SELECT row_number() OVER () - 1 AS k, apellido FROM unnest(ARRAY[
+        'Ríos', 'Castaño', 'Bermúdez', 'Cano', 'Patiño', 'Valencia', 'Arango', 'Montoya',
+        'Gil', 'Ospina', 'Cardona', 'Zuluaga', 'Giraldo', 'Henao', 'Muñoz', 'Vélez',
+        'Rendón', 'Agudelo', 'Bedoya', 'Correa']) apellido) a2 ON a2.k = (g.i * 7) % 20
+ORDER BY g.i;
 
 -- Todos los clientes de prueba aceptaron el aviso de privacidad 1.0 al registrarse.
 INSERT INTO clientes (nombre, telefono, servicio_frecuente_id, autoriza_datos, fecha_autorizacion, version_politica)
@@ -93,56 +127,60 @@ FROM _clientes_seed c JOIN servicios s ON s.nombre = c.frecuente
 ORDER BY c.orden;
 
 -- ---------------------------------------------------------------------
--- Historial de los últimos 90 días (citas atendidas y algunas canceladas)
--- Se genera de forma determinista: la ocupación de cada día de la semana
--- sigue la del mock (sábado alto, domingo bajo) y varía según la hora. Un cliente del prototipo
--- solo aparece antes de su última visita para respetar su fecha.
+-- Historial de los últimos 210 días (citas atendidas y algunas canceladas)
+-- 1. Cada cliente tiene una última visita: hoy - dias (exacta para los 16
+--    clientes con nombre, que usan las pruebas y la demo).
+-- 2. Hacia atrás, una visita cada "ritmo" días, con una variación de ±20 %.
+-- 3. Semana de un salón de barrio: el domingo casi no se atiende y el lunes
+--    es flojo, así que esas visitas se pasan al sábado (pg_temp.dia_salon).
+-- 4. Cada visita ocupa una franja libre (3 estilistas × 10 horas = 30 por
+--    día). Las últimas visitas tienen prioridad (primero las del prototipo),
+--    así sus fechas siempre son exactas.
 -- ---------------------------------------------------------------------
-INSERT INTO citas (fecha, hora, cliente_id, servicio_id, estilista_id, estado)
-SELECT s.fecha,
-       make_time(s.h, 0, 0),
-       cli.id,
-       CASE WHEN s.hsh % 10 < 6 THEN cli.servicio_frecuente_id
-            ELSE (s.hsh / 10) % 5 + 1 END,
-       s.estilista_id,
-       CASE WHEN s.hsh % 17 = 0 THEN 'Cancelada' ELSE 'Atendida' END
-FROM (
-    SELECT d::date AS fecha, e.id AS estilista_id, h,
-           abs(hashtext(d::date || '-' || e.id || '-' || h)) AS hsh
-    FROM generate_series(CURRENT_DATE - 90, CURRENT_DATE - 1, interval '1 day') d
-    CROSS JOIN estilistas e
-    CROSS JOIN generate_series(9, 18) h
-) s
-CROSS JOIN LATERAL (
-    SELECT cl.id, cl.servicio_frecuente_id
-    FROM clientes cl
-    JOIN _clientes_seed cs ON cs.nombre = cl.nombre
-    WHERE cs.dias IS NULL OR s.fecha < CURRENT_DATE - cs.dias
-    ORDER BY abs(hashtext(cl.id || '-' || s.hsh))
-    LIMIT 1
-) cli
--- Probabilidad de ocupación = factor del día de la semana × factor de la hora
--- (pico a las 11:00 y a las 17:00, valle después del almuerzo).
-WHERE (s.hsh / 100) % 100 <
-      (ARRAY[45, 52, 58, 63, 78, 92, 30])[extract(isodow FROM s.fecha)::int]
-    * (ARRAY[70, 95, 115, 105, 70, 55, 60, 110, 130, 100])[s.h - 8] / 100;
+CREATE OR REPLACE FUNCTION pg_temp.dia_salon(d DATE, h BIGINT) RETURNS DATE LANGUAGE sql IMMUTABLE AS $$
+    SELECT CASE extract(isodow FROM d)::int
+             WHEN 7 THEN d - 1                                    -- domingo -> sábado
+             WHEN 1 THEN CASE WHEN h % 3 = 0 THEN d - 2 ELSE d END -- 1 de cada 3 lunes -> sábado
+             ELSE d END
+$$;
 
--- Última visita exacta de los clientes del prototipo (primer horario libre de ese día).
-INSERT INTO citas (fecha, hora, cliente_id, servicio_id, estilista_id, estado)
-SELECT CURRENT_DATE - cs.dias, libre.hora, cl.id, cl.servicio_frecuente_id, libre.estilista_id, 'Atendida'
+CREATE TEMP TABLE _visitas AS
+SELECT cl.id AS cliente_id,
+       CASE WHEN cs.orden <= 16 THEN CURRENT_DATE - cs.dias
+            ELSE pg_temp.dia_salon(CURRENT_DATE - cs.dias, abs(hashtext('ultima-' || cl.id))) END AS fecha,
+       CASE WHEN cs.orden <= 6 THEN 0 ELSE 1 END AS prioridad,
+       cl.servicio_frecuente_id AS servicio_id, 'Atendida' AS estado,
+       abs(hashtext('ultima-' || cl.id)) AS hsh
+FROM _clientes_seed cs JOIN clientes cl ON cl.nombre = cs.nombre
+UNION ALL
+SELECT cl.id, v.fecha, 2,
+       CASE WHEN v.hsh % 10 < 7 THEN cl.servicio_frecuente_id ELSE (v.hsh / 10) % 5 + 1 END,
+       CASE WHEN v.hsh % 17 = 0 THEN 'Cancelada' ELSE 'Atendida' END,
+       v.hsh
 FROM _clientes_seed cs
 JOIN clientes cl ON cl.nombre = cs.nombre
 CROSS JOIN LATERAL (
-    SELECT e.id AS estilista_id, make_time(h, 0, 0) AS hora
-    FROM estilistas e CROSS JOIN generate_series(9, 18) h
-    WHERE NOT EXISTS (
-        SELECT 1 FROM citas c
-        WHERE c.estilista_id = e.id AND c.fecha = CURRENT_DATE - cs.dias
-          AND c.hora = make_time(h, 0, 0) AND c.estado <> 'Cancelada')
-    ORDER BY h, e.id
-    LIMIT 1
-) libre
-WHERE cs.dias IS NOT NULL;
+    SELECT pg_temp.dia_salon(d.d0, d.hsh) AS fecha, d.hsh
+    FROM (
+        SELECT (CURRENT_DATE - cs.dias) - k * cs.ritmo
+                 + (abs(hashtext(cl.id || '-' || k)) % (2 * (cs.ritmo / 5) + 1)) - cs.ritmo / 5 AS d0,
+               abs(hashtext(cl.id || '-' || k)) AS hsh
+        FROM generate_series(1, 210 / cs.ritmo + 1) k
+    ) d
+) v
+WHERE v.fecha >= CURRENT_DATE - 210;
+
+-- Franja n del día (1..30) -> estilista (n-1) % 3 + 1 y una hora distinta por estilista:
+-- multiplicar por 7 (primo con 10) reparte las citas a lo largo del día sin repetir hora.
+INSERT INTO citas (fecha, hora, cliente_id, servicio_id, estilista_id, estado)
+SELECT fecha,
+       make_time((9 + (((n - 1) / 3) * 7 + extract(doy FROM fecha)::int) % 10)::int, 0, 0),
+       cliente_id, servicio_id, ((n - 1) % 3 + 1)::int, estado
+FROM (SELECT v.*, row_number() OVER (PARTITION BY fecha ORDER BY prioridad, hsh) AS n FROM _visitas v) r
+WHERE n <= 30
+ORDER BY fecha, n;
+
+DROP TABLE _visitas;
 
 -- ---------------------------------------------------------------------
 -- Agenda de hoy (igual a mockData.citas)

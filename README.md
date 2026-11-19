@@ -40,7 +40,7 @@ Las reglas críticas se validan **dos veces**: en la API (mensaje claro para el 
 │   │   ├── repositories/      acceso a datos
 │   │   ├── services/          reglas de negocio · riesgo.py integra el servicio de IA
 │   │   └── routers/           endpoints
-│   ├── tests/              56 pruebas de integración (pytest)
+│   ├── tests/              57 pruebas de integración (pytest)
 │   └── .env.example        plantilla de configuración
 ├── ia/                     Servicio de inteligencia artificial (TensorFlow + FastAPI)
 │   ├── entrenar_modelo.py     entrena la red neuronal con datos sintéticos y la evalúa
@@ -119,7 +119,7 @@ sequenceDiagram
 
 ### Cómo usa la aplicación el resultado
 
-- `GET /api/v1/clientes-en-riesgo` entrega al **Dashboard del administrador** la lista ordenada por probabilidad, con nombre, teléfono, intervalo habitual y días sin venir. Ejemplo: *«Sofía Marín: lleva 53 días sin venir. Probabilidad de no volver: 94 %»*. Desde ahí, el administrador marca como contactado a quien ya le escribió.
+- `GET /api/v1/clientes-en-riesgo` entrega al **Dashboard del administrador** la lista ordenada por probabilidad, con nombre, teléfono, intervalo habitual y días sin venir. Ejemplo: *«Sofía Marín venía cada 20 días; lleva 53 días sin venir. Probabilidad de no volver: 83 %»*. Desde ahí, el administrador marca como contactado a quien ya le escribió.
 - `GET /api/v1/dashboard` incluye `clientes_en_riesgo`, el número de clientes en riesgo según el último cálculo, para la tarjeta de resumen.
 
 ### Ejemplo de funcionamiento
@@ -145,7 +145,18 @@ Respuesta real del modelo 1.0.0:
   "nota": "Resultado demostrativo de un modelo entrenado con datos sintéticos. Es una sugerencia para contactar al cliente; la decisión es del propietario." }
 ```
 
-Con los datos de prueba, `GET /api/v1/clientes-en-riesgo` evalúa 16 clientes y marca 5 en riesgo: Sofía Marín (94 %), Camila Torres (94 %), Andrés Ruiz (90 %), Laura Gómez (86 %) y Julián Peña (62 %). Con el servicio de IA apagado, `POST /recalcular` responde `503 «El servicio de IA no está disponible.»` y el dashboard sigue respondiendo 200.
+Con los datos de prueba (216 clientes, cada uno con su propio ritmo de visitas: cada 10 a 45 días), `GET /api/v1/clientes-en-riesgo` evalúa a los 216 y marca **32 en riesgo**:
+
+| Cliente | Venía cada | Días sin venir | Probabilidad | En riesgo |
+|---|---|---|---|---|
+| Carolina Guerrero Castaño | 18,6 días | 72 | 94 % | Sí |
+| Tatiana Acosta Henao | 33,7 días | 100 | 94 % | Sí |
+| Sofía Marín | 19,6 días | 53 | 83 % | Sí |
+| Andrés Ruiz | 17,9 días | 24 | 9 % | No (algo atrasado) |
+| Camila Torres | 40,8 días | 37 | 7 % | No (al día) |
+| Daniel Castro | 16,4 días | 5 | 7 % | No (al día) |
+
+El modelo coincide con la regla fija en 210 de los 216 clientes. Los 6 en que difieren son casos límite, apenas por encima del doble de su intervalo. Con el servicio de IA apagado, `POST /recalcular` responde `503 «El servicio de IA no está disponible.»` y el dashboard sigue respondiendo 200.
 
 ### Evaluación del modelo
 
@@ -274,7 +285,7 @@ cd ../ia
 pytest -v      # usa el modelo entrenado ia/modelo_riesgo.keras
 ```
 
-- **Backend (56 pruebas):** crean una base limpia desde los scripts SQL y cubren autenticación, permisos por rol, cruces de citas, validaciones, flujo de estados, inventario, comisiones y reportes. También cubren la integración con la IA (simulando el servicio cuando responde, cuando falla y cuando devuelve datos inválidos) y la protección de datos.
+- **Backend (57 pruebas):** crean una base limpia desde los scripts SQL y cubren autenticación, permisos por rol, cruces de citas, validaciones, flujo de estados, inventario, comisiones y reportes. También cubren la integración con la IA (simulando el servicio cuando responde, cuando falla y cuando devuelve datos inválidos) y la protección de datos.
 - **Servicio de IA (9 pruebas):** estado del servicio, predicción del ejemplo, rechazo de valores fuera de rango, que no se devuelvan datos personales y la clave de acceso.
 
 GitHub Actions ejecuta las dos suites en cada push (`.github/workflows/ci.yml`) y revisa que el script de Supabase esté al día.

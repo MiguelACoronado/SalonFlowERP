@@ -214,18 +214,20 @@ LEFT JOIN LATERAL (
 -- visitas: con una sola no existe intervalo promedio.
 -- No incluye nombre ni teléfono: es exactamente lo que se envía al servicio (RN-06).
 -- Solo clientes que autorizaron el tratamiento de sus datos (Ley 1581, principio de libertad).
+-- Una visita = un día con al menos una cita atendida: si el cliente se hizo corte y
+-- barba en dos citas el mismo día, es una sola visita (y el gasto de esa visita es la suma).
 CREATE VIEW v_indicadores_rfm WITH (security_invoker = true) AS
 SELECT ci.cliente_id,
        CURRENT_DATE - max(ci.fecha)                                    AS dias_desde_ultima,
-       round(GREATEST((max(ci.fecha) - min(ci.fecha))::numeric / (count(*) - 1), 1), 2)
-                                                                       AS intervalo_promedio,
-       count(*)::int                                                   AS num_visitas,
-       round(avg(ci.precio), 2)                                        AS gasto_promedio
+       round(GREATEST((max(ci.fecha) - min(ci.fecha))::numeric
+                      / (count(DISTINCT ci.fecha) - 1), 1), 2)        AS intervalo_promedio,
+       count(DISTINCT ci.fecha)::int                                   AS num_visitas,
+       round(sum(ci.precio) / count(DISTINCT ci.fecha), 2)             AS gasto_promedio
 FROM citas ci
 JOIN clientes cl ON cl.id = ci.cliente_id AND cl.autoriza_datos
 WHERE ci.estado = 'Atendida'
 GROUP BY ci.cliente_id
-HAVING count(*) >= 2;
+HAVING count(DISTINCT ci.fecha) >= 2;
 
 -- Resultado de cada cálculo: guarda las entradas enviadas, la probabilidad y la
 -- versión del modelo para poder revisar después cada predicción.

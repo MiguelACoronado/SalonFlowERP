@@ -81,7 +81,31 @@ def test_indicadores_rfm_salen_de_las_citas_atendidas(client, admin, predictor):
     sofia = next(c for c in client.get(API, headers=admin).json()["clientes"] if c["cliente"] == "Sofía Marín")
     assert sofia["dias_desde_ultima"] == 53
     historial = client.get(f"/api/v1/clientes/{sofia['cliente_id']}/historial", headers=admin).json()
-    assert sofia["num_visitas"] == sum(1 for c in historial if c["estado"] == "Atendida")
+    # Una visita = un día con citas atendidas (dos citas el mismo día cuentan como una visita).
+    assert sofia["num_visitas"] == len({c["fecha"] for c in historial if c["estado"] == "Atendida"})
+
+
+def test_dos_citas_el_mismo_dia_son_una_visita(client, admin):
+    """Corte y barba en dos citas el mismo día = una visita (no acorta el intervalo promedio)."""
+    from sqlalchemy import text
+
+    from app.core.database import SessionLocal
+
+    sql = "SELECT num_visitas, intervalo_promedio FROM v_indicadores_rfm WHERE cliente_id = 5"
+    with SessionLocal() as db:
+        antes = db.execute(text(sql)).one()
+        # Segunda cita atendida el mismo día de la última visita de Sofía (con otro estilista y hora libre).
+        db.execute(text("""
+            INSERT INTO citas (fecha, hora, cliente_id, servicio_id, estilista_id, estado)
+            SELECT c.fecha, h.hora, 5, 3, e.id, 'Atendida'
+            FROM (SELECT max(fecha) AS fecha FROM citas WHERE cliente_id = 5 AND estado = 'Atendida') c
+            CROSS JOIN estilistas e CROSS JOIN (SELECT make_time(x, 0, 0) AS hora FROM generate_series(9, 18) x) h
+            WHERE NOT EXISTS (SELECT 1 FROM citas o WHERE o.fecha = c.fecha AND o.estilista_id = e.id
+                              AND o.hora = h.hora AND o.estado <> 'Cancelada')
+            LIMIT 1"""))
+        db.commit()
+        despues = db.execute(text(sql)).one()
+    assert despues == antes
 
 
 def test_servicio_caido_sin_lista_previa(client, admin, caido):
