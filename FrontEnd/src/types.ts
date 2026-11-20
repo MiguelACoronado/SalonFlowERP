@@ -36,6 +36,22 @@ export interface Cliente {
   servicio_frecuente: string | null
   ultima_visita: string | null
   dias_sin_visita: number | null
+  /** Ley 1581: autorización del tratamiento de datos y su prueba (fecha y versión del aviso). */
+  autoriza_datos: boolean
+  fecha_autorizacion: string | null
+  version_politica: string | null
+}
+
+/** Aviso de privacidad (Ley 1581, art. 12) que se le lee al cliente antes de registrarlo. */
+export interface AvisoPrivacidad {
+  version: string
+  responsable: string
+  contacto: string
+  datos: string[]
+  finalidades: string[]
+  almacenamiento: string
+  derechos: string
+  texto: string
 }
 
 export interface Producto {
@@ -91,4 +107,10 @@ export interface ClientesEnRiesgo {
   en_riesgo: number
   aviso: string | null
   clientes: ClienteEnRiesgo[]
+}
+
+export interface ProbabilidadesIA {
+  fecha_calculo: string | null
+  version_modelo: string | null
+  clientes: { cliente_id: number; probabilidad: string; en_riesgo: boolean }[]
 }

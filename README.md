@@ -40,7 +40,7 @@ Las reglas críticas se validan **dos veces**: en la API (mensaje claro para el 
 │   │   ├── repositories/      acceso a datos
 │   │   ├── services/          reglas de negocio · riesgo.py integra el servicio de IA
 │   │   └── routers/           endpoints
-│   ├── tests/              57 pruebas de integración (pytest)
+│   ├── tests/              58 pruebas de integración (pytest)
 │   └── .env.example        plantilla de configuración
 ├── ia/                     Servicio de inteligencia artificial (TensorFlow + FastAPI)
 │   ├── entrenar_modelo.py     entrena la red neuronal con datos sintéticos y la evalúa
@@ -51,14 +51,13 @@ Las reglas críticas se validan **dos veces**: en la API (mensaje claro para el 
 │   ├── ejemplos.http          peticiones de ejemplo
 │   └── tests/                 9 pruebas del servicio
 ├── BaseDeDatos/            Scripts SQL para PostgreSQL / Supabase
-├── FrontEnd/               Interfaz web
-│   ├── src/                   aplicación React + TypeScript (una página por módulo)
+├── FrontEnd/               Interfaz web (React + TypeScript + Vite)
+│   ├── src/                   aplicación: una página por módulo, cliente HTTP con JWT
 │   ├── dist/                  versión compilada que entrega la API
-│   └── js/, css/, index.html  prototipo de la fase 2 (datos simulados, GitHub Pages)
+│   └── package.json, vite.config.ts, tsconfig.json   configuración de compilación
 ├── docs/                   Política de tratamiento de datos personales (Ley 1581)
-├── .github/workflows/      CI: pruebas del backend y de la IA en cada push; GitHub Pages
-├── render.yaml             Despliegue en Render (API e IA)
-└── index.html              Entrada del prototipo de la fase 2 en GitHub Pages
+├── .github/workflows/      CI: pruebas del backend y de la IA y compilación de la interfaz en cada push
+└── render.yaml             Despliegue en Render (API e IA)
 ```
 
 ---
@@ -120,6 +119,7 @@ sequenceDiagram
 ### Cómo usa la aplicación el resultado
 
 - `GET /api/v1/clientes-en-riesgo` entrega al **Dashboard del administrador** la lista ordenada por probabilidad, con nombre, teléfono, intervalo habitual y días sin venir. Ejemplo: *«Sofía Marín venía cada 20 días; lleva 53 días sin venir. Probabilidad de no volver: 83 %»*. Desde ahí, el administrador marca como contactado a quien ya le escribió.
+- `GET /api/v1/clientes-en-riesgo/probabilidades` entrega la probabilidad de **todos** los clientes evaluados en el último cálculo (no solo los que están en riesgo), sin volver a llamar al servicio de IA. La usa la lista de **Clientes** para mostrar la columna «Riesgo IA» (solo administrador).
 - `GET /api/v1/dashboard` incluye `clientes_en_riesgo`, el número de clientes en riesgo según el último cálculo, para la tarjeta de resumen.
 
 ### Ejemplo de funcionamiento
@@ -210,6 +210,19 @@ uvicorn app.main:app --port 8000
 - Aplicación: http://127.0.0.1:8000 (la API entrega también la interfaz compilada de `FrontEnd/dist`)
 - Documentación de la API: http://127.0.0.1:8000/api/docs
 
+### 4. Interfaz web (solo para modificarla)
+
+La carpeta `FrontEnd/dist` ya viene compilada, así que este paso solo hace falta si se cambia el código de `FrontEnd/src`. Requiere Node.js 20 o superior.
+
+```bash
+cd FrontEnd
+npm install
+npm run dev        # http://localhost:5173 con recarga automática; /api se redirige a la API del puerto 8000
+npm run build      # revisa los tipos y regenera FrontEnd/dist (hay que versionarlo)
+```
+
+Si la API está en otro dominio, se compila con `VITE_API_URL=https://...` (por defecto se usa el mismo origen).
+
 ### Configuración (`backend/.env`)
 
 | Variable | Para qué | Valor por defecto |
@@ -272,6 +285,7 @@ SalonFlow trata datos personales de clientes (nombre, teléfono e historial), po
 - **Autorización previa (art. 9):** `POST /clientes` exige `"autoriza_datos": true`. Se guardan la fecha y la versión del aviso aceptado como prueba, y la base de datos rechaza una autorización sin ellas.
 - **Aviso de privacidad (art. 12):** `GET /clientes/aviso-privacidad` entrega el texto que se le muestra al cliente, con las finalidades (incluido el análisis con IA) y el almacenamiento fuera de Colombia.
 - **Revocatoria (art. 8):** `PATCH /clientes/{id}` con `"autoriza_datos": false` saca al cliente del análisis de IA y borra sus predicciones.
+- **En la interfaz:** el formulario «Registrar cliente» muestra el aviso y no deja guardar sin marcar la casilla de autorización. Al editar, desmarcarla registra la revocatoria (con confirmación). La lista y la ficha señalan a los clientes sin autorización.
 - **Minimización (RN-06):** el servicio de IA solo recibe indicadores numéricos y no guarda las peticiones.
 
 ## Pruebas
@@ -285,10 +299,10 @@ cd ../ia
 pytest -v      # usa el modelo entrenado ia/modelo_riesgo.keras
 ```
 
-- **Backend (57 pruebas):** crean una base limpia desde los scripts SQL y cubren autenticación, permisos por rol, cruces de citas, validaciones, flujo de estados, inventario, comisiones y reportes. También cubren la integración con la IA (simulando el servicio cuando responde, cuando falla y cuando devuelve datos inválidos) y la protección de datos.
+- **Backend (58 pruebas):** crean una base limpia desde los scripts SQL y cubren autenticación, permisos por rol, cruces de citas, validaciones, flujo de estados, inventario, comisiones y reportes. También cubren la integración con la IA (simulando el servicio cuando responde, cuando falla y cuando devuelve datos inválidos) y la protección de datos.
 - **Servicio de IA (9 pruebas):** estado del servicio, predicción del ejemplo, rechazo de valores fuera de rango, que no se devuelvan datos personales y la clave de acceso.
 
-GitHub Actions ejecuta las dos suites en cada push (`.github/workflows/ci.yml`) y revisa que el script de Supabase esté al día.
+GitHub Actions ejecuta las dos suites en cada push (`.github/workflows/ci.yml`), compila la interfaz web con revisión de tipos (TypeScript estricto) y revisa que el script de Supabase esté al día.
 
 ## Despliegue
 

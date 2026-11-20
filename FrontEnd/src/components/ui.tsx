@@ -1,6 +1,7 @@
 import { CircleCheck, TriangleAlert, X } from 'lucide-react'
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import type { EstadoCita } from '../types'
+import { Estrella, Garabato } from './Doodles'
 
 /* ---------- Avisos ---------- */
 type Aviso = { id: number; texto: string; tipo: 'ok' | 'error' }
@@ -34,7 +35,7 @@ export function Encabezado({ titulo, subtitulo, children }: { titulo: string; su
   return (
     <div className="pagina-cab">
       <div>
-        <h2>{titulo}</h2>
+        <h2 className="marcador">{titulo} <Garabato className="garabato-titulo" /></h2>
         {subtitulo && <p className="sub">{subtitulo}</p>}
       </div>
       {children && <div className="acciones">{children}</div>}
@@ -49,7 +50,7 @@ export function Panel({ titulo, sub, accion, children, className = '' }: {
     <section className={`panel ${className}`}>
       {(titulo || accion) && (
         <div className="panel-cab">
-          <div>{titulo && <h3>{titulo}</h3>}{sub && <p className="sub">{sub}</p>}</div>
+          <div>{titulo && <h3 className="marcador">{titulo}</h3>}{sub && <p className="sub">{sub}</p>}</div>
           {accion}
         </div>
       )}
@@ -82,7 +83,7 @@ export function Cargando({ texto = 'Cargando…' }: { texto?: string }) {
 }
 
 export function Vacio({ texto, children }: { texto: string; children?: ReactNode }) {
-  return <div className="vacio"><p>{texto}</p>{children}</div>
+  return <div className="vacio"><Estrella className="vacio-icono" /><p>{texto}</p>{children}</div>
 }
 
 export function Alerta({ texto, onReintentar }: { texto: string; onReintentar?: () => void }) {
@@ -115,18 +116,19 @@ export function Campo({ etiqueta, error, children, ayuda }: { etiqueta: string; 
   )
 }
 
-/** Panel lateral que se desliza desde la derecha (formularios y detalles). */
+/** Ventana centrada (en celular sube desde abajo) para formularios y detalles. */
 export function Modal({ titulo, onCerrar, children }: { titulo: string; onCerrar: () => void; children: ReactNode }) {
   useEffect(() => {
     const esc = (e: KeyboardEvent) => e.key === 'Escape' && onCerrar()
     window.addEventListener('keydown', esc)
-    return () => window.removeEventListener('keydown', esc)
+    document.body.classList.add('sin-scroll')
+    return () => { window.removeEventListener('keydown', esc); document.body.classList.remove('sin-scroll') }
   }, [onCerrar])
   return (
     <div className="lateral-fondo" onMouseDown={(e) => e.target === e.currentTarget && onCerrar()}>
       <div className="lateral-panel modal" role="dialog" aria-modal="true" aria-label={titulo}>
         <div className="lateral-cab">
-          <h3>{titulo}</h3>
+          <h3 className="marcador">{titulo}</h3>
           <button className="icono-btn" onClick={onCerrar} aria-label="Cerrar"><X /></button>
         </div>
         <div className="lateral-cuerpo">{children}</div>

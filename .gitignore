@@ -10,7 +10,7 @@ htmlcov/
 # Variables de entorno con claves (usar .env.example como plantilla)
 .env
 .env.*
-!.env.example
+.env.example
 
 # Node / frontend
 node_modules/

@@ -9,7 +9,7 @@ Base de datos PostgreSQL alojada en **Supabase**: usuarios y roles, citas sin cr
 | `supabase/salonflow_supabase.sql` | **Instalación en Supabase en un solo paso** (esquema + seguridad + datos de prueba). Archivo generado. |
 | `supabase/generar.sh` | Regenera el archivo anterior después de cambiar `01` o `02`. |
 | `01_esquema.sql` | Tablas, reglas, vistas y funciones de reporte. |
-| `02_datos_prueba.sql` | Datos equivalentes a `mockData.js`, con fechas relativas a hoy. |
+| `02_datos_prueba.sql` | Datos de demostración (216 clientes con visitas realistas), con fechas relativas a hoy. |
 | `03_consultas.sql` | Consultas de referencia por funcionalidad (las que implementa `backend/app/repositories`). |
 
 ## Instalar en Supabase
@@ -94,17 +94,17 @@ erDiagram
 
 ## Reglas de negocio en la base de datos
 
-| Regla del prototipo | Cómo se garantiza |
+| Regla de negocio | Cómo se garantiza |
 |---|---|
-| Un estilista no puede tener dos citas a la misma hora (`Cita.hayConflicto`) | Índice único parcial `ux_citas_sin_cruce` (las citas canceladas liberan el horario) |
-| No hay clientes repetidos (`Cliente.existe`) | Índice único sobre `lower(trim(nombre))` |
-| El stock nunca baja de 0 (`Producto.ajustar`) | Trigger en `movimientos_inventario`, que además deja el historial de ajustes |
+| Un estilista no puede tener dos citas a la misma hora | Índice único parcial `ux_citas_sin_cruce` (las citas canceladas liberan el horario) |
+| No hay clientes repetidos | Índice único sobre `lower(trim(nombre))` |
+| El stock nunca baja de 0 | Trigger en `movimientos_inventario`, que además deja el historial de ajustes |
 | Comisión = precio × tasa (30 % por defecto) | `configuracion.tasa_comision` + `fn_comisiones()` |
 | Última visita y clientes inactivos | Se calculan desde las citas `Atendida` (vista `v_clientes`) |
 | Cada atención queda registrada como venta | Estado `Atendida` + precio cobrado en `citas` |
 | Correos de usuario únicos y estilista con un solo usuario | Índice único sobre `lower(email)` y `UNIQUE(estilista_id)` |
 
-**Cambio respecto al prototipo:** se agregó el estado `Atendida`. Las comisiones y los reportes salen de las citas realmente atendidas y ya no de cifras fijas.
+La cita **Atendida** es la venta del servicio: las comisiones y los reportes salen de las citas realmente atendidas y ya no de cifras fijas.
 
 ## Usuarios de prueba
 

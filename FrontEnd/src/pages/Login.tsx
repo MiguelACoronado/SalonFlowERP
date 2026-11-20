@@ -1,8 +1,12 @@
+import { Play } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import { useAuth } from '../auth/AuthContext'
+import { Chispas, Corona, Estrella, Flecha, Garabato, Mancha, Rayo, Subrayado } from '../components/Doodles'
 import { Campo } from '../components/ui'
+
+const MODULOS = ['Agenda', 'Clientes', 'Inventario', 'Comisiones', 'Reportes']
 
 export default function Login() {
   const { usuario, login } = useAuth()
@@ -37,36 +41,42 @@ export default function Login() {
 
   return (
     <div className="login">
-      <div className="login-arte">
-        <h1>Tu barbería, al día.</h1>
-        <p>Agenda por silla, clientes, inventario, comisiones y reportes en un solo lugar.</p>
-        <ul className="login-chips" aria-hidden>
-          <li>Agenda por silla</li><li>Clientes</li><li>Inventario</li><li>Comisiones</li><li>Reportes</li>
-        </ul>
-      </div>
-      <form className="login-form" onSubmit={enviar} noValidate>
-        <div className="marca" style={{ padding: 0 }}>
-          <span className="marca-poste" aria-hidden />
+      <Mancha className="mancha mancha-a" color="#B9922F" variante={0} />
+      <Mancha className="mancha mancha-b" color="#4A141E" variante={1} />
+      <Mancha className="mancha mancha-c" color="#F7F2E9" variante={2} />
+
+      <section className="login-hero">
+        <p className="saludo marcador">Hola, maestro <Flecha className="flecha-saludo" /></p>
+        <h1 className="titulo-gigante marcador">
+          Tu barbería,<br />al día
+          <Subrayado className="subrayado" />
+          <Corona className="doodle corona" />
+        </h1>
+        <p className="tagline">{MODULOS.map((m, i) => <span key={m}>{i > 0 && <b>•</b>}{m}</span>)}</p>
+        <div className="burbuja marcador">¡Sin cruces de horario!</div>
+        <Estrella className="doodle estrella-1" />
+        <Rayo className="doodle rayo-1" />
+        <Chispas className="doodle chispas-1" />
+        <Garabato className="doodle garabato-1" />
+      </section>
+
+      <form className="login-form tarjeta" onSubmit={enviar} noValidate>
+        <div className="marca">
+          <img src="/favicon.svg" alt="" className="marca-logo" />
           <div><div className="marca-nombre">SalonFlow</div><div className="marca-sub">Barbería y peluquería</div></div>
         </div>
-        <h2>Inicia sesión</h2>
-        <p className="sub">Usa el correo con el que te registró el administrador.</p>
+        <div>
+          <h2 className="marcador">Inicia sesión</h2>
+          <p className="sub">Usa el correo con el que te registró el administrador.</p>
+        </div>
         {general && <div className="alerta" role="alert">{general}</div>}
         <Campo etiqueta="Correo" error={errores.email}>
-          <input type="email" autoComplete="username" value={email} onChange={(e) => { setEmail(e.target.value); setErrores((x) => ({ ...x, email: '' })) }} autoFocus />
+          <input type="email" autoComplete="username" placeholder="tu@correo.com" value={email} onChange={(e) => { setEmail(e.target.value); setErrores((x) => ({ ...x, email: '' })) }} autoFocus />
         </Campo>
         <Campo etiqueta="Contraseña" error={errores.password}>
-          <input type="password" autoComplete="current-password" value={password} onChange={(e) => { setPassword(e.target.value); setErrores((x) => ({ ...x, password: '' })) }} />
+          <input type="password" autoComplete="current-password" placeholder="••••••••" value={password} onChange={(e) => { setPassword(e.target.value); setErrores((x) => ({ ...x, password: '' })) }} />
         </Campo>
-        <button className="btn btn-pri ancho" disabled={enviando}>{enviando ? 'Entrando…' : 'Entrar'}</button>
-        <details className="demo">
-          <summary>Usuarios de demostración</summary>
-          <ul>
-            <li><code>admin@salonflow.co</code> con <code>Admin123*</code></li>
-            <li><code>recepcion@salonflow.co</code> con <code>Recepcion123*</code></li>
-            <li><code>hector@salonflow.co</code> con <code>Estilista123*</code></li>
-          </ul>
-        </details>
+        <button className="btn login-entrar ancho" disabled={enviando}><Play aria-hidden />{enviando ? 'Entrando…' : 'Entrar'}</button>
       </form>
     </div>
   )

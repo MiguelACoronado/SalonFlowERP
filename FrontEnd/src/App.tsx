@@ -7,6 +7,7 @@ import Citas from './pages/Citas'
 import Clientes from './pages/Clientes'
 import Comisiones from './pages/Comisiones'
 import Inicio from './pages/Inicio'
+import IA from './pages/IA'
 import Inventario from './pages/Inventario'
 import Login from './pages/Login'
 import Reportes from './pages/Reportes'
@@ -41,6 +42,7 @@ export default function App() {
               <Route path="inventario" element={<Protegida roles={['admin', 'recepcion']}><Inventario /></Protegida>} />
               <Route path="comisiones" element={<Protegida roles={['admin', 'estilista']}><Comisiones /></Protegida>} />
               <Route path="reportes" element={<Protegida roles={['admin']}><Reportes /></Protegida>} />
+              <Route path="ia" element={<Protegida roles={['admin']}><IA /></Protegida>} />
               <Route path="servicios" element={<Protegida roles={['admin']}><Servicios /></Protegida>} />
               <Route path="usuarios" element={<Protegida roles={['admin']}><Usuarios /></Protegida>} />
               <Route path="*" element={<div className="vacio"><h2>Página no encontrada</h2><Link to="/">Volver al inicio</Link></div>} />

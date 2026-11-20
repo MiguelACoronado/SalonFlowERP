@@ -102,8 +102,7 @@ CREATE UNIQUE INDEX ux_clientes_nombre ON clientes (lower(trim(nombre)));
 
 -- ---------------------------------------------------------------------
 -- Citas
--- Estados del prototipo: Pendiente, Confirmada, Cancelada.
--- Se agrega 'Atendida': la cita realizada es la venta del servicio y es
+-- Estados: Pendiente, Confirmada, Cancelada y 'Atendida': la cita realizada es la venta del servicio y es
 -- la base de comisiones y reportes.
 -- ---------------------------------------------------------------------
 CREATE TABLE citas (
@@ -162,8 +161,8 @@ CREATE TABLE movimientos_inventario (
 );
 CREATE INDEX ix_movimientos_producto ON movimientos_inventario (producto_id);
 
--- Al insertar un movimiento se actualiza el stock. Igual que en el prototipo
--- (Math.max(0, ...)) el stock nunca baja de 0: si la salida es mayor que el
+-- Al insertar un movimiento se actualiza el stock. El
+-- stock nunca baja de 0: si la salida es mayor que el
 -- stock, se registra solo lo que realmente salió; si no hay nada que mover,
 -- el movimiento se descarta.
 CREATE FUNCTION trg_movimiento_aplicar() RETURNS trigger AS $$
@@ -373,7 +372,7 @@ ALTER TABLE prediccion_riesgo      ENABLE ROW LEVEL SECURITY;
 
 -- =====================================================================
 -- SalonFlow ERP · Datos de prueba
--- Reproduce FrontEnd/js/data/mockData.js. Las fechas son relativas a hoy
+-- Datos de demostración. Las fechas son relativas a hoy
 -- (CURRENT_DATE), así la demo siempre muestra "la agenda de hoy" y los
 -- mismos clientes inactivos, sin importar el día en que se ejecute.
 -- Ejecutar después de 01_esquema.sql.
@@ -439,7 +438,7 @@ ORDER BY p.orden;
 -- (días desde su última visita). Así el historial se parece al de un salón
 -- real: un cliente fijo viene cada 2 a 6 semanas, no todos los días.
 --
--- Los 6 primeros son los del prototipo, con sus días sin venir del mock
+-- Los 6 primeros tienen días sin venir fijos
 -- (respecto al 21-sep: Laura 19, Andrés 24, Camila 37, Julián 11, Sofía 53,
 -- Daniel 5). Sofía lleva más del doble de su ritmo sin venir: es el caso
 -- de cliente en riesgo de la demo. Los 10 siguientes son clientes fijos.
@@ -507,7 +506,7 @@ ORDER BY c.orden;
 -- 3. Semana de un salón de barrio: el domingo casi no se atiende y el lunes
 --    es flojo, así que esas visitas se pasan al sábado (pg_temp.dia_salon).
 -- 4. Cada visita ocupa una franja libre (3 estilistas × 10 horas = 30 por
---    día). Las últimas visitas tienen prioridad (primero las del prototipo),
+--    día). Las últimas visitas tienen prioridad (primero las de los clientes con nombre),
 --    así sus fechas siempre son exactas.
 -- ---------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION pg_temp.dia_salon(d DATE, h BIGINT) RETURNS DATE LANGUAGE sql IMMUTABLE AS $$
@@ -556,7 +555,7 @@ ORDER BY fecha, n;
 DROP TABLE _visitas;
 
 -- ---------------------------------------------------------------------
--- Agenda de hoy (igual a mockData.citas)
+-- Agenda de hoy
 -- ---------------------------------------------------------------------
 INSERT INTO citas (fecha, hora, cliente_id, servicio_id, estilista_id, estado)
 SELECT CURRENT_DATE, a.hora::time, cl.id, s.id, e.id, a.estado

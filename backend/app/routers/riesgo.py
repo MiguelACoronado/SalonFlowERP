@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import ADMIN, requiere_roles
-from app.schemas.riesgo import ClientesEnRiesgoOut, ContactadoIn, ContactadoOut
+from app.schemas.riesgo import ClientesEnRiesgoOut, ContactadoIn, ContactadoOut, ProbabilidadesOut
 from app.services import riesgo as servicio
 
 router = APIRouter(prefix="/clientes-en-riesgo", tags=["Inteligencia artificial"])
@@ -22,6 +22,12 @@ Predictor = Annotated[servicio.PredictorRiesgo, Depends(servicio.get_predictor)]
             summary="Lista de clientes en riesgo (calcula una vez al día con el servicio de IA)")
 def listar(db: DB, _: Admin, predictor: Predictor):
     return servicio.consultar(db, predictor)
+
+
+@router.get("/probabilidades", response_model=ProbabilidadesOut,
+            summary="Probabilidad de todos los clientes evaluados en el último cálculo (no llama a la IA)")
+def probabilidades(db: DB, _: Admin):
+    return servicio.probabilidades(db)
 
 
 @router.post("/recalcular", response_model=ClientesEnRiesgoOut,

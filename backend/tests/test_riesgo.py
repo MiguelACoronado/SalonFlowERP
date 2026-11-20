@@ -176,3 +176,16 @@ def test_respuesta_invalida_del_servicio(client, admin):
         assert client.post(f"{API}/recalcular", headers=admin).status_code == 503
     finally:
         app.dependency_overrides.pop(servicio.get_predictor, None)
+
+
+def test_probabilidades_de_todos_los_evaluados(client, admin, recepcion, predictor):
+    vacio = client.get(f"{API}/probabilidades", headers=admin).json()
+    assert vacio == {"fecha_calculo": None, "version_modelo": None, "clientes": []}
+    lista = client.get(API, headers=admin).json()
+    datos = client.get(f"{API}/probabilidades", headers=admin).json()
+    # Incluye a todos los evaluados (también los que no están en riesgo), sin volver a llamar a la IA.
+    assert len(datos["clientes"]) == lista["evaluados"] > lista["en_riesgo"]
+    assert datos["version_modelo"] == "prueba" and len(predictor.recibido) == 1
+    en_riesgo = {c["cliente_id"] for c in datos["clientes"] if c["en_riesgo"]}
+    assert en_riesgo == {c["cliente_id"] for c in lista["clientes"]}
+    assert client.get(f"{API}/probabilidades", headers=recepcion).status_code == 403

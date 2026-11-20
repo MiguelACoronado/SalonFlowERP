@@ -109,6 +109,17 @@ def consultar_guardado(db: Session, aviso: str | None = None) -> dict:
             "clientes": repo.lista(db, fecha), "aviso": aviso}
 
 
+def probabilidades(db: Session) -> dict:
+    """Probabilidad de cada cliente evaluado en el último cálculo guardado. No llama al servicio de IA."""
+    fecha = repo.ultima_fecha(db)
+    if fecha is None:
+        return {"fecha_calculo": None, "version_modelo": None, "clientes": []}
+    filas = repo.lista(db, fecha, solo_en_riesgo=False)
+    return {"fecha_calculo": fecha, "version_modelo": repo.resumen(db, fecha)["version_modelo"],
+            "clientes": [{"cliente_id": f["cliente_id"], "probabilidad": f["probabilidad"],
+                          "en_riesgo": f["en_riesgo"]} for f in filas]}
+
+
 def consultar(db: Session, predictor: PredictorRiesgo) -> dict:
     """Lista para el dashboard. La primera consulta del día dispara el cálculo diario."""
     if repo.ultima_fecha(db) == hoy():

@@ -90,8 +90,7 @@ CREATE UNIQUE INDEX ux_clientes_nombre ON clientes (lower(trim(nombre)));
 
 -- ---------------------------------------------------------------------
 -- Citas
--- Estados del prototipo: Pendiente, Confirmada, Cancelada.
--- Se agrega 'Atendida': la cita realizada es la venta del servicio y es
+-- Estados: Pendiente, Confirmada, Cancelada y 'Atendida': la cita realizada es la venta del servicio y es
 -- la base de comisiones y reportes.
 -- ---------------------------------------------------------------------
 CREATE TABLE citas (
@@ -150,8 +149,8 @@ CREATE TABLE movimientos_inventario (
 );
 CREATE INDEX ix_movimientos_producto ON movimientos_inventario (producto_id);
 
--- Al insertar un movimiento se actualiza el stock. Igual que en el prototipo
--- (Math.max(0, ...)) el stock nunca baja de 0: si la salida es mayor que el
+-- Al insertar un movimiento se actualiza el stock. El
+-- stock nunca baja de 0: si la salida es mayor que el
 -- stock, se registra solo lo que realmente salió; si no hay nada que mover,
 -- el movimiento se descarta.
 CREATE FUNCTION trg_movimiento_aplicar() RETURNS trigger AS $$

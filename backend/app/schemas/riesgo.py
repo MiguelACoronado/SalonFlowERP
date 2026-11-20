@@ -37,3 +37,16 @@ class ContactadoOut(Esquema):
     id: int
     contactado: bool
     contactado_en: datetime | None
+
+
+class ProbabilidadCliente(Esquema):
+    cliente_id: int
+    probabilidad: Decimal
+    en_riesgo: bool
+
+
+class ProbabilidadesOut(Esquema):
+    """Probabilidad de todos los clientes evaluados en el último cálculo (para la lista de clientes)."""
+    fecha_calculo: date | None
+    version_modelo: str | None
+    clientes: list[ProbabilidadCliente]
